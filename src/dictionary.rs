@@ -12,5 +12,5 @@ const DICTIONARY: &'static [&'static str] = &[
 pub fn random_word() -> PlayableWord {
   let mut rng = thread_rng();
   let word_str = DICTIONARY.choose(&mut rng).unwrap();
-  PlayableWord::word(word_str)
+  PlayableWord::from(*word_str)
 }

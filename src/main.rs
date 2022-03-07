@@ -1,8 +1,8 @@
 use wordle::words::PlayableWord;
 
 fn main() {
-    let todays_word = PlayableWord::word("DRINK");
-    let first_guess = PlayableWord::word("ADIEU");
+    let todays_word = PlayableWord::from("DRINK");
+    let first_guess = PlayableWord::from("ADIEU");
 
     println!(
         "Today's word is:\n{}. Guess:\n{}. Result:\n{}",

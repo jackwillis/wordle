@@ -23,10 +23,10 @@ impl fmt::Display for TileGuessOutcome {
 }
 
 /// Represents the outcome of a guess.
+#[derive(Debug, PartialEq)]
 pub struct WordGuessOutcome(Vec<TileGuessOutcome>);
 
 impl WordGuessOutcome {
-  #[allow(dead_code)]
   pub fn is_correct(&self) -> bool {
     self
       .0
@@ -46,7 +46,7 @@ impl fmt::Display for WordGuessOutcome {
 
 /// Represents a word that can be played in Wordle.
 /// Must be exactly five letters long and contain only uppercase basic Latin letters.
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct PlayableWord(String);
 
 impl fmt::Display for PlayableWord {
@@ -73,14 +73,16 @@ impl TryFrom<String> for PlayableWord {
   }
 }
 
-impl PlayableWord {
-  /// Creates a [`PlayableWord`] from a known good input.
-  /// Will panic if the input does not validate.
-  /// Wraps [`PlayableWord::try_from<String>()`].
-  pub fn word(word_str: &str) -> PlayableWord {
-    PlayableWord::try_from(String::from(word_str)).unwrap()
+/// Creates a [`PlayableWord`] from a known good input.
+/// Will panic if the input does not validate.
+/// Wraps [`PlayableWord::try_from<String>()`].
+impl From<&str> for PlayableWord {
+  fn from(value: &str) -> Self {
+    PlayableWord::try_from(String::from(value)).unwrap()
   }
+}
 
+impl PlayableWord {
   /// Returns an iterator over the letters of the word.
   fn chars(&self) -> Chars {
     self.0.chars()
@@ -103,5 +105,110 @@ impl PlayableWord {
       }
     };
     WordGuessOutcome(other.chars().enumerate().map(guess_tile).collect())
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::TileGuessOutcome;
+
+  #[test]
+  fn formats_tile_guess_outcome() {
+    assert_eq!(format!("{}", TileGuessOutcome::PlacedCorrectly), "X");
+    assert_eq!(format!("{}", TileGuessOutcome::PresentElsewhere), "O");
+    assert_eq!(format!("{}", TileGuessOutcome::NotPresent), "_");
+  }
+
+  use super::WordGuessOutcome;
+
+  fn correct_word_guess_outcome() -> WordGuessOutcome {
+    WordGuessOutcome(vec![
+      TileGuessOutcome::PlacedCorrectly,
+      TileGuessOutcome::PlacedCorrectly,
+      TileGuessOutcome::PlacedCorrectly,
+      TileGuessOutcome::PlacedCorrectly,
+      TileGuessOutcome::PlacedCorrectly,
+    ])
+  }
+
+  fn incorrect_word_guess_outcome() -> WordGuessOutcome {
+    WordGuessOutcome(vec![
+      TileGuessOutcome::PlacedCorrectly,
+      TileGuessOutcome::PlacedCorrectly,
+      TileGuessOutcome::NotPresent,
+      TileGuessOutcome::PresentElsewhere,
+      TileGuessOutcome::NotPresent,
+    ])
+  }
+
+  #[test]
+  fn checks_correct_word_guess_outcome() {
+    assert!(correct_word_guess_outcome().is_correct());
+  }
+
+  #[test]
+  fn checks_incorrect_word_guess_outcome() {
+    assert!(!incorrect_word_guess_outcome().is_correct());
+  }
+
+  #[test]
+  fn formats_word_guess_outcome() {
+    assert_eq!(format!("{}", incorrect_word_guess_outcome()), "XX_O_");
+  }
+
+  use super::PlayableWord;
+
+  #[test]
+  fn formats_word() {
+    assert_eq!(format!("{}", PlayableWord::from("BRACK")), "BRACK");
+  }
+
+  #[test]
+  fn accepts_valid_word_from_string() {
+    assert_eq!(
+      PlayableWord::try_from(String::from("DRAKE")).unwrap(),
+      PlayableWord(String::from("DRAKE"))
+    );
+  }
+
+  #[test]
+  fn capitalizes_valid_word_from_string() {
+    assert_eq!(
+      PlayableWord::try_from(String::from("Gumbo")).unwrap(),
+      PlayableWord(String::from("GUMBO"))
+    );
+  }
+
+  #[test]
+  fn rejects_short_word_from_string() {
+    assert!(PlayableWord::try_from(String::from("HEN")).is_err());
+  }
+
+  #[test]
+  fn rejects_long_word_from_string() {
+    assert!(PlayableWord::try_from(String::from("PRAIRIE")).is_err());
+  }
+
+  #[test]
+  fn rejects_non_basic_latin_word_from_string() {
+    assert!(PlayableWord::try_from(String::from("OBÉIR")).is_err());
+  }
+
+  #[test]
+  fn rejects_blank_word_from_string() {
+    assert!(PlayableWord::try_from(String::new()).is_err());
+  }
+
+  #[test]
+  fn accepts_correct_guess() {
+    let word = PlayableWord::from("JANUS");
+    assert_eq!(word.guess(&word), correct_word_guess_outcome());
+  }
+
+  #[test]
+  fn rejects_incorrect_guess() {
+    let word = PlayableWord::from("SPICE");
+    let wrong_guess = PlayableWord::from("SPACE");
+    assert_ne!(word.guess(&wrong_guess), correct_word_guess_outcome());
   }
 }
