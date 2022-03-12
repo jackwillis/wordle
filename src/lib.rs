@@ -3,17 +3,18 @@ pub mod dictionary;
 use std::fmt;
 use std::str::Chars;
 
-/// Represents the outcome of one tile in a guess.
+/// Represents the outcome of guessing one tile.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum TileGuessOutcome {
-    /// The letter played is in the word and in the correct position.
+    /// The letter played *is* in the word, and was guessed in the *correct* position.
     PlacedCorrectly,
-    /// The letter played is in the word but in the wrong position.
+    /// The letter played *is* in the word, but was guessed in the *wrong* position.
     PresentElsewhere,
-    /// The letter played is not in the word.
+    /// The letter played is *not* in the word.
     NotPresent,
 }
 
+/// Format a tile guess outcome: X (green), O (yellow), or _ (gray)
 impl fmt::Display for TileGuessOutcome {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
@@ -24,11 +25,12 @@ impl fmt::Display for TileGuessOutcome {
     }
 }
 
-/// Represents the outcome of a guess.
+/// Represents the outcome of guessing a word.
 #[derive(Clone, Debug, PartialEq)]
 pub struct WordGuessOutcome(Vec<TileGuessOutcome>);
 
 impl WordGuessOutcome {
+    /// Have all tiles been guessed correctly?
     pub fn is_correct(&self) -> bool {
         self.0
             .iter()
@@ -36,6 +38,7 @@ impl WordGuessOutcome {
     }
 }
 
+/// Format a word guess outcome by just printing the outcome all of its tiles.
 impl fmt::Display for WordGuessOutcome {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for x in self.0.iter() {
@@ -50,13 +53,14 @@ impl fmt::Display for WordGuessOutcome {
 #[derive(Clone, Debug, PartialEq)]
 pub struct PlayableWord(String);
 
+/// Format a playable word by plainly printing the word.
 impl fmt::Display for PlayableWord {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.0)
     }
 }
 
-/// Creates a [`PlayableWord`] safely, returning a [`Result`].
+/// Creates a playable word from user input which may be invalid.
 /// Normalizes to uppercase.
 impl TryFrom<String> for PlayableWord {
     type Error = &'static str;
@@ -74,9 +78,8 @@ impl TryFrom<String> for PlayableWord {
     }
 }
 
-/// Creates a [`PlayableWord`] from a known good input.
+/// Creates a playable word from a known good input.
 /// Will panic if the input does not validate.
-/// Wraps [`PlayableWord::try_from<String>()`].
 impl From<&str> for PlayableWord {
     fn from(value: &str) -> Self {
         PlayableWord::try_from(String::from(value)).unwrap()
