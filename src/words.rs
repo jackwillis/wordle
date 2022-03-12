@@ -2,7 +2,7 @@ use std::fmt;
 use std::str::Chars;
 
 /// Represents the outcome of one tile in a guess.
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum TileGuessOutcome {
     /// The letter played is in the word and in the correct position.
     PlacedCorrectly,
@@ -23,7 +23,7 @@ impl fmt::Display for TileGuessOutcome {
 }
 
 /// Represents the outcome of a guess.
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct WordGuessOutcome(Vec<TileGuessOutcome>);
 
 impl WordGuessOutcome {
@@ -45,7 +45,7 @@ impl fmt::Display for WordGuessOutcome {
 
 /// Represents a word that can be played in Wordle.
 /// Must be exactly five letters long and contain only uppercase basic Latin letters.
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct PlayableWord(String);
 
 impl fmt::Display for PlayableWord {
@@ -83,20 +83,15 @@ impl From<&str> for PlayableWord {
 
 impl PlayableWord {
     /// Returns an iterator over the letters of the word.
-    fn chars(&self) -> Chars {
+    fn tiles(&self) -> Chars {
         self.0.chars()
-    }
-
-    /// Returns the *n*th letter in the word.
-    fn nth(&self, n: usize) -> Option<char> {
-        self.chars().nth(n)
     }
 
     /// Returns the outcome of guessing a letter-tile at a given position
     fn guess_tile(&self, position: usize, tile: char) -> TileGuessOutcome {
-        if self.nth(position) == Some(tile) {
+        if self.tiles().nth(position) == Some(tile) {
             TileGuessOutcome::PlacedCorrectly
-        } else if self.chars().any(|x| x == tile) {
+        } else if self.tiles().any(|x| x == tile) {
             TileGuessOutcome::PresentElsewhere
         } else {
             TileGuessOutcome::NotPresent
@@ -104,14 +99,14 @@ impl PlayableWord {
     }
 
     /// Returns the outcome of a guess on a [`PlayableWord`].
-    pub fn guess(&self, other: &Self) -> WordGuessOutcome {
-        WordGuessOutcome(
-            other
-                .chars()
-                .enumerate()
-                .map(|(position, tile)| self.guess_tile(position, tile))
-                .collect(),
-        )
+    pub fn guess(&self, prediction: &Self) -> WordGuessOutcome {
+        // Guess each tile then collect the result
+        let tile_outcomes = prediction
+            .tiles()
+            .enumerate()
+            .map(|(position, tile)| self.guess_tile(position, tile));
+
+        WordGuessOutcome(tile_outcomes.collect())
     }
 }
 
