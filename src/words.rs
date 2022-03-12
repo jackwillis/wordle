@@ -211,4 +211,12 @@ mod tests {
     let wrong_guess = PlayableWord::from("SPACE");
     assert_ne!(word.guess(&wrong_guess), correct_word_guess_outcome());
   }
+
+  #[test]
+  fn evaluates_and_formats_guess() {
+    let word = PlayableWord::from("CRANE");
+    let wrong_guess = PlayableWord::from("BROWN");
+    let guess = word.guess(&wrong_guess);
+    assert_eq!(format!("{}", guess), "_X__O");
+  }
 }
