@@ -1,4 +1,4 @@
-use wordle::words::PlayableWord;
+use wordle::PlayableWord;
 
 fn main() {
     let todays_word = PlayableWord::from("DRINK");
