@@ -1,13 +1,35 @@
+use std::io;
+use std::io::Write;
+
 use wordle::PlayableWord;
 
-fn main() {
+fn main() -> io::Result<()> {
     let todays_word = PlayableWord::from("DRINK");
-    let first_guess = PlayableWord::from("ADIEU");
+    let mut remaining_guesses = 6;
 
-    println!(
-        "Today's word is:\n{}. Guess:\n{}. Result:\n{}",
-        todays_word,
-        first_guess,
-        todays_word.guess(&first_guess)
-    );
+    let stdin = io::stdin();
+
+    println!("WORDLE!");
+
+    while remaining_guesses != 0 {
+        print!("{} ", remaining_guesses);
+        io::stdout().flush()?;
+
+        let mut buffer = String::new();
+        stdin.read_line(&mut buffer)?;
+
+        match PlayableWord::try_from(buffer.trim()) {
+            Ok(predicted_word) => {
+                let guess = todays_word.guess(&predicted_word);
+                println!("  {}", guess);
+
+                remaining_guesses -= 1;
+            }
+            Err(msg) => {
+                println!("Input error: {}", msg);
+            }
+        }
+    }
+
+    Ok(())
 }
