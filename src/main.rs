@@ -1,19 +1,18 @@
 use std::io;
 use std::io::Write;
 
-use wordle::GameStatus;
+use wordle::{Game, GameStatus, PlayableWord};
 
 fn main() -> io::Result<()> {
     println!("WORDLE!");
 
-    let secret_word = wordle::dictionary::random_word();
-    let mut game = wordle::Game::new(secret_word);
+    let mut game = Game::new(wordle::dictionary::random_word());
 
-    while game.status() == wordle::GameStatus::Active {
+    while game.status() == GameStatus::Active {
         print!("{} ", game.remaining_guesses());
         io::stdout().flush()?;
 
-        let user_input = wordle::PlayableWord::try_from(read_line()?);
+        let user_input = PlayableWord::try_from(read_line()?);
 
         match user_input {
             Ok(prediction) => {
@@ -21,9 +20,21 @@ fn main() -> io::Result<()> {
 
                 print!("  {} | ", game.last_outcome().unwrap());
 
-                for c in &game.guessed_letters {
+                print!("good: ");
+                for c in &game.correctly_guessed_letters {
                     print!("{}", c);
                 }
+
+                print!(" | bad: ");
+                for c in &game.incorrectly_guessed_letters {
+                    print!("{}", c);
+                }
+
+                print!(" | unknown: ");
+                for c in &game.unknown_letters {
+                    print!("{}", c);
+                }
+
                 println!();
             }
             Err(msg) => {
@@ -33,7 +44,7 @@ fn main() -> io::Result<()> {
     }
 
     match game.status() {
-        GameStatus::Lost => println!("You lost. :("),
+        GameStatus::Lost => println!("You lost :(\nThe word was: {}", game.secret_word),
         GameStatus::Won => println!("You're a winner, baby!"),
         _ => unreachable!(),
     }

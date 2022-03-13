@@ -125,19 +125,28 @@ pub enum GameStatus {
 
 #[derive(Clone, Debug)]
 pub struct Game {
-    secret_word: PlayableWord,
+    pub secret_word: PlayableWord,
     guess_outcomes: Vec<WordGuessOutcome>,
-    pub guessed_letters: BTreeSet<char>,
+    pub correctly_guessed_letters: BTreeSet<char>,
+    pub incorrectly_guessed_letters: BTreeSet<char>,
+    pub unknown_letters: BTreeSet<char>,
 }
 
 impl Game {
     const MAXIMUM_GUESSES: i32 = 6;
 
+    const ALPHABET: [char; 26] = [
+        'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R',
+        'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+    ];
+
     pub fn new(secret_word: PlayableWord) -> Game {
         Game {
             secret_word,
             guess_outcomes: Vec::new(),
-            guessed_letters: BTreeSet::new(),
+            correctly_guessed_letters: BTreeSet::new(),
+            incorrectly_guessed_letters: BTreeSet::new(),
+            unknown_letters: BTreeSet::from(Game::ALPHABET),
         }
     }
 
@@ -149,8 +158,15 @@ impl Game {
         let guess_outcome = self.secret_word.guess(&prediction);
         self.guess_outcomes.push(guess_outcome.clone());
 
-        prediction.tiles().for_each(|letter| {
-            self.guessed_letters.insert(letter);
+        prediction.tiles().for_each(|tile| {
+            // secret_word.tiles() contains only uppercase values
+            if self.secret_word.tiles().any(|x| x == tile) {
+                self.correctly_guessed_letters.insert(tile);
+            } else {
+                self.incorrectly_guessed_letters.insert(tile);
+            }
+
+            self.unknown_letters.remove(&tile);
         });
     }
 
@@ -159,12 +175,10 @@ impl Game {
     }
 
     pub fn status(&self) -> GameStatus {
-        if self.remaining_guesses() == 0 {
-            if self.last_outcome().unwrap().is_correct() {
-                GameStatus::Won
-            } else {
-                GameStatus::Lost
-            }
+        if self.last_outcome().is_some() && self.last_outcome().unwrap().is_correct() {
+            GameStatus::Won
+        } else if self.remaining_guesses() == 0 {
+            GameStatus::Lost
         } else {
             GameStatus::Active
         }
