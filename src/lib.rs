@@ -27,7 +27,7 @@ impl fmt::Display for TileGuessOutcome {
 
 /// Represents the outcome of guessing a word.
 #[derive(Clone, Debug, PartialEq)]
-pub struct WordGuessOutcome(Vec<TileGuessOutcome>);
+pub struct WordGuessOutcome(pub Vec<TileGuessOutcome>);
 
 impl WordGuessOutcome {
     /// Have all tiles been guessed correctly?
@@ -88,7 +88,7 @@ impl From<&str> for PlayableWord {
 
 impl PlayableWord {
     /// Returns an iterator over the letters of the word.
-    fn tiles(&self) -> Chars {
+    pub fn tiles(&self) -> Chars {
         self.0.chars()
     }
 
