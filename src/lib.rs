@@ -33,9 +33,8 @@ pub struct WordGuessOutcome(pub Vec<TileGuessOutcome>);
 impl WordGuessOutcome {
     /// Have all tiles been guessed correctly?
     pub fn is_correct(&self) -> bool {
-        self.0
-            .iter()
-            .all(|x| x == &TileGuessOutcome::PlacedCorrectly)
+        let WordGuessOutcome(v) = self; // deconstruct sole unnamed struct item into `v`
+        v.iter().all(|x| x == &TileGuessOutcome::PlacedCorrectly)
     }
 }
 
@@ -89,15 +88,15 @@ impl From<&str> for PlayableWord {
 
 impl PlayableWord {
     /// Returns an iterator over the letters of the word.
-    pub fn tiles(&self) -> Chars {
+    pub fn letters(&self) -> Chars {
         self.0.chars()
     }
 
-    /// Returns the outcome of guessing a letter-tile at a given position
-    fn guess_tile(&self, position: usize, tile: char) -> TileGuessOutcome {
-        if self.tiles().nth(position) == Some(tile) {
+    /// Returns the outcome of guessing a letter at a given position
+    fn compare_letter(&self, position: usize, letter: char) -> TileGuessOutcome {
+        if self.letters().nth(position) == Some(letter) {
             TileGuessOutcome::PlacedCorrectly
-        } else if self.tiles().any(|x| x == tile) {
+        } else if self.letters().any(|c| c == letter) {
             TileGuessOutcome::PresentElsewhere
         } else {
             TileGuessOutcome::NotPresent
@@ -105,12 +104,12 @@ impl PlayableWord {
     }
 
     /// Returns the outcome of a guess on a [`PlayableWord`].
-    pub fn guess(&self, prediction: &Self) -> WordGuessOutcome {
+    pub fn compare_word(&self, prediction: &Self) -> WordGuessOutcome {
         // Guess each tile then collect the result
         let tile_outcomes = prediction
-            .tiles()
+            .letters()
             .enumerate()
-            .map(|(position, tile)| self.guess_tile(position, tile));
+            .map(|(position, letter)| self.compare_letter(position, letter));
 
         WordGuessOutcome(tile_outcomes.collect())
     }
@@ -155,7 +154,7 @@ impl Game {
     }
 
     pub fn push_prediction(&mut self, prediction: PlayableWord) {
-        let guess_outcome = self.secret_word.guess(&prediction);
+        let guess_outcome = self.secret_word.compare_word(&prediction);
         self.guess_outcomes.push(guess_outcome);
 
         self.update_letter_sets(&prediction);
@@ -163,9 +162,9 @@ impl Game {
 
     /// Updates player knowledge of good, bad, and unknown letters for a given prediction.
     fn update_letter_sets(&mut self, prediction: &PlayableWord) {
-        for tile in prediction.tiles() {
+        for tile in prediction.letters() {
             // secret_word.tiles() contains only uppercase values
-            if self.secret_word.tiles().any(|x| x == tile) {
+            if self.secret_word.letters().any(|x| x == tile) {
                 self.correctly_guessed_letters.insert(tile);
             } else {
                 self.incorrectly_guessed_letters.insert(tile);
@@ -284,21 +283,24 @@ mod tests {
     #[test]
     fn accepts_correct_guess() {
         let word = PlayableWord::from("JANUS");
-        assert_eq!(word.guess(&word), correct_word_guess_outcome());
+        assert_eq!(word.compare_word(&word), correct_word_guess_outcome());
     }
 
     #[test]
     fn rejects_incorrect_guess() {
         let word = PlayableWord::from("SPICE");
         let wrong_guess = PlayableWord::from("SPACE");
-        assert_ne!(word.guess(&wrong_guess), correct_word_guess_outcome());
+        assert_ne!(
+            word.compare_word(&wrong_guess),
+            correct_word_guess_outcome()
+        );
     }
 
     #[test]
     fn evaluates_and_formats_guess() {
         let word = PlayableWord::from("CRANE");
         let wrong_guess = PlayableWord::from("BROWN");
-        let guess = word.guess(&wrong_guess);
+        let guess = word.compare_word(&wrong_guess);
         assert_eq!(format!("{}", guess), "_X__O");
     }
 }
