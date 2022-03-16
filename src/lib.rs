@@ -154,11 +154,16 @@ impl Game {
         Game::MAXIMUM_GUESSES as usize - self.guess_outcomes.len()
     }
 
-    pub fn play(&mut self, prediction: PlayableWord) {
+    pub fn push_prediction(&mut self, prediction: PlayableWord) {
         let guess_outcome = self.secret_word.guess(&prediction);
         self.guess_outcomes.push(guess_outcome);
 
-        prediction.tiles().for_each(|tile| {
+        self.update_letter_sets(&prediction);
+    }
+
+    /// Updates player knowledge of good, bad, and unknown letters for a given prediction.
+    fn update_letter_sets(&mut self, prediction: &PlayableWord) {
+        for tile in prediction.tiles() {
             // secret_word.tiles() contains only uppercase values
             if self.secret_word.tiles().any(|x| x == tile) {
                 self.correctly_guessed_letters.insert(tile);
@@ -167,7 +172,7 @@ impl Game {
             }
 
             self.unknown_letters.remove(&tile);
-        });
+        }
     }
 
     pub fn last_outcome(&self) -> Option<&WordGuessOutcome> {

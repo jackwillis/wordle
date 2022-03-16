@@ -19,7 +19,7 @@ fn main() -> io::Result<()> {
             Ok(prediction) => {
                 // `prediction` is the user's guess: a five letter word.
                 // This method adds this guess to the list of plays in `game`.
-                game.play(prediction);
+                game.push_prediction(prediction);
 
                 // print outcome of last play
                 // when printed looks something like "XO__X" where
