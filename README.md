@@ -10,9 +10,15 @@ Rules:
 * You may make up to six guesses.
 * You may guess any five-character sequence.
 * After you guess, the outcome of your guess will be shown.  
+<<<<<<< HEAD
     * If the first letter guessed matches the first letter of the secret word, the first symbol of the outcome will be 'X', likewise for second, third, forth, and fifth.
     * 'O' means the letter is present in the word but not at that position.
     * '_' means the letter is not present in the word.
+=======
+* * If the first letter guessed matches the first letter of the secret word, the first symbol of the outcome will be 'X', likewise for second, third, forth, and fifth.
+* * 'O' means the letter is present in the word but not at that position.
+* * '_' means the letter is not present in the word.
+>>>>>>> 84cf718029863157b9ec64b775c0696475bbcb5c
 * Known good, bad, and unknown letters are shown to the side of the outcome.
 
 published under [MIT license](LICENSE)
