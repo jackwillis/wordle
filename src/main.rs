@@ -6,6 +6,7 @@ use wordle::{Game, GameStatus, PlayableWord};
 fn main() -> io::Result<()> {
     println!("WORDLE!");
 
+    // this object is the state for the whole program
     let mut game = Game::new(wordle::dictionary::random_word());
 
     while game.status() == GameStatus::Active {
@@ -16,8 +17,13 @@ fn main() -> io::Result<()> {
 
         match user_input {
             Ok(prediction) => {
+                // `prediction` is the user's guess: a five letter word.
+                // This method adds this guess to the list of plays in `game`.
                 game.play(prediction);
 
+                // print outcome of last play
+                // when printed looks something like "XO__X" where
+                // 'X'<-PlacedCorrectly, 'O'<-PresentElsewhere, '_'<-NotPresent
                 print!("  {} | ", game.last_outcome().unwrap());
 
                 print!("good: ");
