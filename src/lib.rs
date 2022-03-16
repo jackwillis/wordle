@@ -156,7 +156,7 @@ impl Game {
 
     pub fn play(&mut self, prediction: PlayableWord) {
         let guess_outcome = self.secret_word.guess(&prediction);
-        self.guess_outcomes.push(guess_outcome.clone());
+        self.guess_outcomes.push(guess_outcome);
 
         prediction.tiles().for_each(|tile| {
             // secret_word.tiles() contains only uppercase values
