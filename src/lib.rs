@@ -61,7 +61,7 @@ impl fmt::Display for PlayableWord {
 }
 
 /// Creates a playable word from user input which may be invalid.
-/// Normalizes to uppercase.
+/// Normalizes to uppercase, so playable words have only one representation.
 impl TryFrom<String> for PlayableWord {
     type Error = &'static str;
 
@@ -69,9 +69,8 @@ impl TryFrom<String> for PlayableWord {
         if value.len() != 5 {
             Err("Word must be five letters long.")
         } else if value.chars().any(|c| !c.is_ascii_alphabetic()) {
-            Err("Word contains non--Latin letter values.")
+            Err("Word must contain only letters from the English alphabet.")
         } else {
-            // Store word as uppercase, so playable words have only one representation
             let uppercased = value.chars().flat_map(|c| c.to_uppercase()).collect();
             Ok(PlayableWord(uppercased))
         }
@@ -125,7 +124,7 @@ pub enum GameStatus {
 #[derive(Clone, Debug)]
 pub struct Game {
     pub secret_word: PlayableWord,
-    guess_outcomes: Vec<WordGuessOutcome>,
+    pub guess_outcomes: Vec<WordGuessOutcome>,
     pub correctly_guessed_letters: BTreeSet<char>,
     pub incorrectly_guessed_letters: BTreeSet<char>,
     pub unknown_letters: BTreeSet<char>,
@@ -157,20 +156,19 @@ impl Game {
         let guess_outcome = self.secret_word.compare_word(&prediction);
         self.guess_outcomes.push(guess_outcome);
 
-        self.update_letter_sets(&prediction);
+        self.update_player_knowledge(&prediction);
     }
 
     /// Updates player knowledge of good, bad, and unknown letters for a given prediction.
-    fn update_letter_sets(&mut self, prediction: &PlayableWord) {
-        for tile in prediction.letters() {
-            // secret_word.tiles() contains only uppercase values
-            if self.secret_word.letters().any(|x| x == tile) {
-                self.correctly_guessed_letters.insert(tile);
+    fn update_player_knowledge(&mut self, prediction: &PlayableWord) {
+        for letter in prediction.letters() {
+            if self.secret_word.letters().any(|x| x == letter) {
+                self.correctly_guessed_letters.insert(letter);
             } else {
-                self.incorrectly_guessed_letters.insert(tile);
+                self.incorrectly_guessed_letters.insert(letter);
             }
 
-            self.unknown_letters.remove(&tile);
+            self.unknown_letters.remove(&letter);
         }
     }
 
