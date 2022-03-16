@@ -6,7 +6,7 @@ Command-line wordle clone in Rust.
 
 Rules:
 * The goal of the game is to guess the secret word.
-* The secret word is a five-letter-long English word.
+* The secret word is a random five-letter-long English word.
 * You may make up to six guesses.
 * You may guess any five-character sequence.
 * After you guess, the outcome of your guess will be shown.  
