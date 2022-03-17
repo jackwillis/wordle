@@ -6,7 +6,7 @@ use std::str::Chars;
 
 /// Represents the outcome of guessing one tile.
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub enum TileGuessOutcome {
+pub enum LetterComparison {
     /// The letter played *is* in the word, and was guessed in the *correct* position.
     PlacedCorrectly,
     /// The letter played *is* in the word, but was guessed in the *wrong* position.
@@ -15,8 +15,7 @@ pub enum TileGuessOutcome {
     NotPresent,
 }
 
-/// Format a tile guess outcome: X (green), O (yellow), or _ (gray)
-impl fmt::Display for TileGuessOutcome {
+impl fmt::Display for LetterComparison {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Self::PlacedCorrectly => write!(f, "X"),
@@ -28,18 +27,18 @@ impl fmt::Display for TileGuessOutcome {
 
 /// Represents the outcome of guessing a word.
 #[derive(Clone, Debug, PartialEq)]
-pub struct WordGuessOutcome(pub Vec<TileGuessOutcome>);
+pub struct WordComparison(pub Vec<LetterComparison>);
 
-impl WordGuessOutcome {
+impl WordComparison {
     /// Have all tiles been guessed correctly?
     pub fn is_correct(&self) -> bool {
-        let WordGuessOutcome(v) = self; // deconstruct sole unnamed struct item into `v`
-        v.iter().all(|x| x == &TileGuessOutcome::PlacedCorrectly)
+        let WordComparison(v) = self; // deconstruct sole unnamed struct item into `v`
+        v.iter().all(|x| x == &LetterComparison::PlacedCorrectly)
     }
 }
 
 /// Format a word guess outcome by just printing the outcome all of its tiles.
-impl fmt::Display for WordGuessOutcome {
+impl fmt::Display for WordComparison {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for x in self.0.iter() {
             write!(f, "{}", x)?
@@ -52,6 +51,35 @@ impl fmt::Display for WordGuessOutcome {
 /// Must be exactly five letters long and contain only uppercase basic Latin letters.
 #[derive(Clone, Debug, PartialEq)]
 pub struct PlayableWord(String);
+
+impl PlayableWord {
+    /// Returns an iterator over the letters of the word.
+    pub fn letters(&self) -> Chars {
+        self.0.chars()
+    }
+
+    /// Returns the outcome of guessing a letter at a given position
+    fn compare_letter(&self, position: usize, letter: char) -> LetterComparison {
+        if self.letters().nth(position) == Some(letter) {
+            LetterComparison::PlacedCorrectly
+        } else if self.letters().any(|c| c == letter) {
+            LetterComparison::PresentElsewhere
+        } else {
+            LetterComparison::NotPresent
+        }
+    }
+
+    /// Returns the outcome of a guess on a [`PlayableWord`].
+    pub fn compare_word(&self, prediction: &Self) -> WordComparison {
+        // Guess each letter then collect the result
+        let letter_comparisons = prediction
+            .letters()
+            .enumerate()
+            .map(|(position, letter)| self.compare_letter(position, letter));
+
+        WordComparison(letter_comparisons.collect())
+    }
+}
 
 /// Format a playable word by plainly printing the word.
 impl fmt::Display for PlayableWord {
@@ -85,35 +113,6 @@ impl From<&str> for PlayableWord {
     }
 }
 
-impl PlayableWord {
-    /// Returns an iterator over the letters of the word.
-    pub fn letters(&self) -> Chars {
-        self.0.chars()
-    }
-
-    /// Returns the outcome of guessing a letter at a given position
-    fn compare_letter(&self, position: usize, letter: char) -> TileGuessOutcome {
-        if self.letters().nth(position) == Some(letter) {
-            TileGuessOutcome::PlacedCorrectly
-        } else if self.letters().any(|c| c == letter) {
-            TileGuessOutcome::PresentElsewhere
-        } else {
-            TileGuessOutcome::NotPresent
-        }
-    }
-
-    /// Returns the outcome of a guess on a [`PlayableWord`].
-    pub fn compare_word(&self, prediction: &Self) -> WordGuessOutcome {
-        // Guess each tile then collect the result
-        let tile_outcomes = prediction
-            .letters()
-            .enumerate()
-            .map(|(position, letter)| self.compare_letter(position, letter));
-
-        WordGuessOutcome(tile_outcomes.collect())
-    }
-}
-
 #[derive(PartialEq)]
 pub enum GameStatus {
     Active,
@@ -122,62 +121,85 @@ pub enum GameStatus {
 }
 
 #[derive(Clone, Debug)]
-pub struct Game {
-    pub secret_word: PlayableWord,
-    pub guess_outcomes: Vec<WordGuessOutcome>,
-    pub correctly_guessed_letters: BTreeSet<char>,
-    pub incorrectly_guessed_letters: BTreeSet<char>,
-    pub unknown_letters: BTreeSet<char>,
+pub struct LetterKnowledge {
+    pub correct: BTreeSet<char>,
+    pub incorrect: BTreeSet<char>,
+    pub unknown: BTreeSet<char>,
 }
 
-impl Game {
-    const MAXIMUM_GUESSES: i32 = 6;
-
+impl LetterKnowledge {
     const ALPHABET: [char; 26] = [
         'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R',
         'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
     ];
 
+    pub fn update(&self, secret_word: &PlayableWord, prediction: &PlayableWord) -> Self {
+        let mut updated_knowledge = self.clone();
+
+        for letter in prediction.letters() {
+            if secret_word.letters().any(|x| x == letter) {
+                updated_knowledge.correct.insert(letter);
+            } else {
+                updated_knowledge.incorrect.insert(letter);
+            }
+
+            updated_knowledge.unknown.remove(&letter);
+        }
+
+        updated_knowledge
+    }
+}
+
+impl Default for LetterKnowledge {
+    fn default() -> Self {
+        Self {
+            correct: BTreeSet::new(),
+            incorrect: BTreeSet::new(),
+            unknown: BTreeSet::from(LetterKnowledge::ALPHABET),
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct Game {
+    pub secret_word: PlayableWord,
+    pub word_comparisons: Vec<WordComparison>,
+    pub letter_knowledge: LetterKnowledge,
+}
+
+impl Game {
+    const MAXIMUM_GUESSES: i32 = 6;
+
     pub fn new(secret_word: PlayableWord) -> Game {
         Game {
             secret_word,
-            guess_outcomes: Vec::new(),
-            correctly_guessed_letters: BTreeSet::new(),
-            incorrectly_guessed_letters: BTreeSet::new(),
-            unknown_letters: BTreeSet::from(Game::ALPHABET),
+            word_comparisons: Vec::new(),
+            letter_knowledge: LetterKnowledge::default(),
         }
+    }
+
+    pub fn update(&self, prediction: PlayableWord) -> Self {
+        let mut updated_game = self.clone();
+
+        let guess_outcome = self.secret_word.compare_word(&prediction);
+        updated_game.word_comparisons.push(guess_outcome);
+
+        let updated_knowledge = self.letter_knowledge.update(&self.secret_word, &prediction);
+        updated_game.letter_knowledge = updated_knowledge;
+
+        updated_game
     }
 
     pub fn remaining_guesses(&self) -> usize {
-        Game::MAXIMUM_GUESSES as usize - self.guess_outcomes.len()
+        Game::MAXIMUM_GUESSES as usize - self.word_comparisons.len()
     }
 
-    pub fn push_prediction(&mut self, prediction: PlayableWord) {
-        let guess_outcome = self.secret_word.compare_word(&prediction);
-        self.guess_outcomes.push(guess_outcome);
-
-        self.update_player_knowledge(&prediction);
-    }
-
-    /// Updates player knowledge of good, bad, and unknown letters for a given prediction.
-    fn update_player_knowledge(&mut self, prediction: &PlayableWord) {
-        for letter in prediction.letters() {
-            if self.secret_word.letters().any(|x| x == letter) {
-                self.correctly_guessed_letters.insert(letter);
-            } else {
-                self.incorrectly_guessed_letters.insert(letter);
-            }
-
-            self.unknown_letters.remove(&letter);
-        }
-    }
-
-    pub fn last_outcome(&self) -> Option<&WordGuessOutcome> {
-        self.guess_outcomes.last()
+    pub fn last_comparison(&self) -> Option<&WordComparison> {
+        self.word_comparisons.last()
     }
 
     pub fn status(&self) -> GameStatus {
-        if self.last_outcome().is_some() && self.last_outcome().unwrap().is_correct() {
+        if self.last_comparison().is_some() && self.last_comparison().unwrap().is_correct() {
             GameStatus::Won
         } else if self.remaining_guesses() == 0 {
             GameStatus::Lost
@@ -189,34 +211,34 @@ impl Game {
 
 #[cfg(test)]
 mod tests {
-    use super::TileGuessOutcome;
+    use super::LetterComparison;
 
     #[test]
     fn formats_tile_guess_outcome() {
-        assert_eq!(format!("{}", TileGuessOutcome::PlacedCorrectly), "X");
-        assert_eq!(format!("{}", TileGuessOutcome::PresentElsewhere), "O");
-        assert_eq!(format!("{}", TileGuessOutcome::NotPresent), "_");
+        assert_eq!(format!("{}", LetterComparison::PlacedCorrectly), "X");
+        assert_eq!(format!("{}", LetterComparison::PresentElsewhere), "O");
+        assert_eq!(format!("{}", LetterComparison::NotPresent), "_");
     }
 
-    use super::WordGuessOutcome;
+    use super::WordComparison;
 
-    fn correct_word_guess_outcome() -> WordGuessOutcome {
-        WordGuessOutcome(vec![
-            TileGuessOutcome::PlacedCorrectly,
-            TileGuessOutcome::PlacedCorrectly,
-            TileGuessOutcome::PlacedCorrectly,
-            TileGuessOutcome::PlacedCorrectly,
-            TileGuessOutcome::PlacedCorrectly,
+    fn correct_word_guess_outcome() -> WordComparison {
+        WordComparison(vec![
+            LetterComparison::PlacedCorrectly,
+            LetterComparison::PlacedCorrectly,
+            LetterComparison::PlacedCorrectly,
+            LetterComparison::PlacedCorrectly,
+            LetterComparison::PlacedCorrectly,
         ])
     }
 
-    fn incorrect_word_guess_outcome() -> WordGuessOutcome {
-        WordGuessOutcome(vec![
-            TileGuessOutcome::PlacedCorrectly,
-            TileGuessOutcome::PlacedCorrectly,
-            TileGuessOutcome::NotPresent,
-            TileGuessOutcome::PresentElsewhere,
-            TileGuessOutcome::NotPresent,
+    fn incorrect_word_guess_outcome() -> WordComparison {
+        WordComparison(vec![
+            LetterComparison::PlacedCorrectly,
+            LetterComparison::PlacedCorrectly,
+            LetterComparison::NotPresent,
+            LetterComparison::PresentElsewhere,
+            LetterComparison::NotPresent,
         ])
     }
 

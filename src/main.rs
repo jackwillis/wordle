@@ -19,25 +19,25 @@ fn main() -> io::Result<()> {
             Ok(prediction) => {
                 // `prediction` is the user's guess: a five letter word.
                 // This method adds this guess to the list of plays in `game`.
-                game.push_prediction(prediction);
+                game = game.update(prediction);
 
                 // print outcome of last play
                 // when printed looks something like "XO__X" where
                 // 'X'<-PlacedCorrectly, 'O'<-PresentElsewhere, '_'<-NotPresent
-                print!("  {} | ", game.last_outcome().unwrap());
+                print!("  {} | ", game.last_comparison().unwrap());
 
                 print!("good: ");
-                for c in &game.correctly_guessed_letters {
+                for c in &game.letter_knowledge.correct {
                     print!("{}", c);
                 }
 
                 print!(" | bad: ");
-                for c in &game.incorrectly_guessed_letters {
+                for c in &game.letter_knowledge.incorrect {
                     print!("{}", c);
                 }
 
                 print!(" | unknown: ");
-                for c in &game.unknown_letters {
+                for c in &game.letter_knowledge.unknown {
                     print!("{}", c);
                 }
 
