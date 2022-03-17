@@ -47,7 +47,6 @@ impl fmt::Display for LetterScore {
 ///
 /// println!("{}", winning_score); //=> "XXXXX"
 /// assert!(winning_score.is_winner());
-///
 /// ```
 #[derive(Clone, Debug, PartialEq)]
 pub struct WordScore(
@@ -56,10 +55,9 @@ pub struct WordScore(
 );
 
 impl WordScore {
-    /// Have all letters been guessed correctly?
+    /// Returns true if all letters have been guessed correctly.
     pub fn is_winner(&self) -> bool {
-        let WordScore(v) = self; // deconstruct sole unnamed struct item into `v`
-        v.iter().all(|x| x == &LetterScore::PlacedCorrectly)
+        self.0.iter().all(|x| x == &LetterScore::PlacedCorrectly)
     }
 }
 
@@ -79,6 +77,21 @@ impl fmt::Display for WordScore {
 /// * The word is exactly five letters long.
 /// * The word contains only letters from the English alphabet.
 /// * The letters are uppercase.
+///
+/// ```rust
+/// use wordle::LegalWord;
+///
+/// // The safe way to instantiate this type
+/// let adieu_heap: Result<LegalWord, _> = LegalWord::try_from(String::from("ADIEU"));
+///
+/// // Here the program will panic if the input does not meet the constraints for the type.
+/// let adieu_static = LegalWord::from("ADIEU");
+///
+/// assert_eq!(adieu_heap.unwrap(), adieu_static);
+///
+/// let invalid_word = LegalWord::try_from(String::from("onomatopeia"));
+/// assert!(invalid_word.is_err());
+/// ```
 #[derive(Clone, Debug, PartialEq, derive_more::Display)]
 pub struct LegalWord(String);
 
