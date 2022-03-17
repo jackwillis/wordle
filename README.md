@@ -36,4 +36,4 @@ See: [The Cargo Book](https://doc.rust-lang.org/cargo/index.html),
 
 See also [clippy](https://github.com/rust-lang/rust-clippy),
 a linter which is used in the
-[continuous integration](https://github.com/jackwillis/wordle/actions/workflows/rust.yml).
+[continuous integration](https://github.com/jackwillis/wordle/actions/workflows/build.yml).
