@@ -1,7 +1,7 @@
 use std::io;
 use std::io::Write;
 
-use wordle::{Game, GameStatus, PlayableWord};
+use wordle::{Game, GameStatus, LegalWord};
 
 fn main() -> io::Result<()> {
     println!("WORDLE!");
@@ -13,26 +13,24 @@ fn main() -> io::Result<()> {
         print!("{} ", game.remaining_guesses());
         io::stdout().flush()?;
 
-        let user_input = PlayableWord::try_from(read_line()?);
+        let user_input = LegalWord::try_from(read_line()?);
 
         match user_input {
             Ok(prediction) => {
-                // `prediction` is the user's guess: a five letter word.
-                // This method adds this guess to the list of plays in `game`.
+                // this is where the game state is updated.
+                // the score of prediction is added to `game.scores`
+                // the player knowledge of good and bad letters is updated
                 game = game.update(prediction);
 
-                // print outcome of last play
-                // when printed looks something like "XO__X" where
-                // 'X'<-PlacedCorrectly, 'O'<-PresentElsewhere, '_'<-NotPresent
-                print!("  {} | ", game.last_comparison().unwrap());
+                print!("  {} | ", game.last_score().unwrap());
 
                 print!("good: ");
-                for c in &game.letter_knowledge.correct {
+                for c in &game.letter_knowledge.good {
                     print!("{}", c);
                 }
 
                 print!(" | bad: ");
-                for c in &game.letter_knowledge.incorrect {
+                for c in &game.letter_knowledge.bad {
                     print!("{}", c);
                 }
 

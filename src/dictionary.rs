@@ -1,16 +1,14 @@
-#![allow(dead_code)]
-
-use crate::PlayableWord;
+use crate::LegalWord;
 use rand::seq::SliceRandom;
-use rand::thread_rng;
 
 const DICTIONARY: &[&str] = &[
     "CIGAR", "REBUT", "SISSY", "HUMPH", "AWAKE", "BLUSH", "FOCAL", "EVADE", "NAVAL", "SERVE",
     "HEATH", "DWARF", "MODEL", "KARMA", "STINK", "GRADE", "QUIET", "BENCH", "ABATE", "FEIGN",
 ];
 
-pub fn random_word() -> PlayableWord {
-    let mut rng = thread_rng();
+/// Chooses a random word from a dictionary, and converts into [LegalWord].
+pub fn random_word() -> LegalWord {
+    let mut rng = rand::thread_rng();
     let word_str = DICTIONARY.choose(&mut rng).unwrap();
-    PlayableWord::from(*word_str)
+    (*word_str).into()
 }

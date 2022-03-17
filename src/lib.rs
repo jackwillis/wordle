@@ -4,18 +4,20 @@ use std::collections::BTreeSet;
 use std::fmt;
 use std::str::Chars;
 
-/// Represents the outcome of guessing one tile.
+extern crate derive_more;
+
+/// The player's score for one letter of a guess.
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub enum LetterComparison {
-    /// The letter played *is* in the word, and was guessed in the *correct* position.
+pub enum LetterScore {
+    /// The correct letter was guessed in the correct spot.
     PlacedCorrectly,
-    /// The letter played *is* in the word, but was guessed in the *wrong* position.
+    /// The letter was part of the word but not at that position.
     PresentElsewhere,
-    /// The letter played is *not* in the word.
+    /// The letter was not in the word.
     NotPresent,
 }
 
-impl fmt::Display for LetterComparison {
+impl fmt::Display for LetterScore {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Self::PlacedCorrectly => write!(f, "X"),
@@ -25,20 +27,44 @@ impl fmt::Display for LetterComparison {
     }
 }
 
-/// Represents the outcome of guessing a word.
+/// Represents the player's score for guessing one word.
+///
+/// Wraps a [Vec] of five [LetterScore]s.
+///
+/// ```rust
+/// use wordle::LetterScore::{NotPresent, PlacedCorrectly, PresentElsewhere};
+///
+/// let o = PresentElsewhere;
+/// let x = PlacedCorrectly;
+/// let u = NotPresent;
+///
+/// let mediocre_score = wordle::WordScore(vec![o, u, x, x, u]);
+///
+/// println!("{}", mediocre_score); //=> "O_XX_"
+/// assert!(!mediocre_score.is_winner());
+///
+/// let winning_score = wordle::WordScore(vec![x, x, x, x, x]);
+///
+/// println!("{}", winning_score); //=> "XXXXX"
+/// assert!(winning_score.is_winner());
+///
+/// ```
 #[derive(Clone, Debug, PartialEq)]
-pub struct WordComparison(pub Vec<LetterComparison>);
+pub struct WordScore(
+    /// The hidden data of this struct.
+    pub Vec<LetterScore>,
+);
 
-impl WordComparison {
-    /// Have all tiles been guessed correctly?
-    pub fn is_correct(&self) -> bool {
-        let WordComparison(v) = self; // deconstruct sole unnamed struct item into `v`
-        v.iter().all(|x| x == &LetterComparison::PlacedCorrectly)
+impl WordScore {
+    /// Have all letters been guessed correctly?
+    pub fn is_winner(&self) -> bool {
+        let WordScore(v) = self; // deconstruct sole unnamed struct item into `v`
+        v.iter().all(|x| x == &LetterScore::PlacedCorrectly)
     }
 }
 
-/// Format a word guess outcome by just printing the outcome all of its tiles.
-impl fmt::Display for WordComparison {
+impl fmt::Display for WordScore {
+    /// Concatenates all the [LetterScore]s.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for x in self.0.iter() {
             write!(f, "{}", x)?
@@ -47,52 +73,49 @@ impl fmt::Display for WordComparison {
     }
 }
 
-/// Represents a word that can be played in Wordle.
-/// Must be exactly five letters long and contain only uppercase basic Latin letters.
-#[derive(Clone, Debug, PartialEq)]
-pub struct PlayableWord(String);
+/// A legal word according to the rules of wordle.
+///
+/// This type guarantees that:
+/// * The word is exactly five letters long.
+/// * The word contains only letters from the English alphabet.
+/// * The letters are uppercase.
+#[derive(Clone, Debug, PartialEq, derive_more::Display)]
+pub struct LegalWord(String);
 
-impl PlayableWord {
+impl LegalWord {
     /// Returns an iterator over the letters of the word.
     pub fn letters(&self) -> Chars {
         self.0.chars()
     }
 
-    /// Returns the outcome of guessing a letter at a given position
-    fn compare_letter(&self, position: usize, letter: char) -> LetterComparison {
+    /// Compares two letters at a given position resulting in a [LetterScore].
+    fn compare_letter(&self, position: usize, letter: char) -> LetterScore {
         if self.letters().nth(position) == Some(letter) {
-            LetterComparison::PlacedCorrectly
+            LetterScore::PlacedCorrectly
         } else if self.letters().any(|c| c == letter) {
-            LetterComparison::PresentElsewhere
+            LetterScore::PresentElsewhere
         } else {
-            LetterComparison::NotPresent
+            LetterScore::NotPresent
         }
     }
 
-    /// Returns the outcome of a guess on a [`PlayableWord`].
-    pub fn compare_word(&self, prediction: &Self) -> WordComparison {
+    /// Compares a prediction against the secret word, resulting in a [WordScore].
+    pub fn guess(&self, prediction: &Self) -> WordScore {
         // Guess each letter then collect the result
-        let letter_comparisons = prediction
+        let letter_scores = prediction
             .letters()
             .enumerate()
             .map(|(position, letter)| self.compare_letter(position, letter));
 
-        WordComparison(letter_comparisons.collect())
+        WordScore(letter_scores.collect())
     }
 }
 
-/// Format a playable word by plainly printing the word.
-impl fmt::Display for PlayableWord {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-/// Creates a playable word from user input which may be invalid.
-/// Normalizes to uppercase, so playable words have only one representation.
-impl TryFrom<String> for PlayableWord {
+impl TryFrom<String> for LegalWord {
     type Error = &'static str;
 
+    /// Validates and creates a [LegalWord] at runtime.
+    /// Normalizes to uppercase, so words have only one representation.
     fn try_from(value: String) -> Result<Self, Self::Error> {
         if value.len() != 5 {
             Err("Word must be five letters long.")
@@ -100,30 +123,31 @@ impl TryFrom<String> for PlayableWord {
             Err("Word must contain only letters from the English alphabet.")
         } else {
             let uppercased = value.chars().flat_map(|c| c.to_uppercase()).collect();
-            Ok(PlayableWord(uppercased))
+            Ok(LegalWord(uppercased))
         }
     }
 }
 
 /// Creates a playable word from a known good input.
 /// Will panic if the input does not validate.
-impl From<&str> for PlayableWord {
+impl From<&str> for LegalWord {
     fn from(value: &str) -> Self {
-        PlayableWord::try_from(String::from(value)).unwrap()
+        LegalWord::try_from(String::from(value)).unwrap()
     }
 }
 
-#[derive(PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum GameStatus {
     Active,
     Lost,
     Won,
 }
 
-#[derive(Clone, Debug)]
+/// Represents the player's knowledge of "good" and "bad" letters.
+#[derive(Clone)]
 pub struct LetterKnowledge {
-    pub correct: BTreeSet<char>,
-    pub incorrect: BTreeSet<char>,
+    pub good: BTreeSet<char>,
+    pub bad: BTreeSet<char>,
     pub unknown: BTreeSet<char>,
 }
 
@@ -133,56 +157,60 @@ impl LetterKnowledge {
         'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
     ];
 
-    pub fn update(&self, secret_word: &PlayableWord, prediction: &PlayableWord) -> Self {
-        let mut updated_knowledge = self.clone();
+    pub fn update(&self, secret_word: &LegalWord, prediction: &LegalWord) -> Self {
+        let mut knowledge = self.clone();
 
+        // Receive information from the letters in our guess
         for letter in prediction.letters() {
+            // Each letter could be revealed as a "good" or "bad" letter
+            // Good means the guessed letter is in the set of letters of the secret word.
             if secret_word.letters().any(|x| x == letter) {
-                updated_knowledge.correct.insert(letter);
+                knowledge.good.insert(letter);
             } else {
-                updated_knowledge.incorrect.insert(letter);
+                knowledge.bad.insert(letter);
             }
 
-            updated_knowledge.unknown.remove(&letter);
+            // Any letter that's been played, whether good or bad, is no longer unknown.
+            knowledge.unknown.remove(&letter);
         }
 
-        updated_knowledge
+        knowledge
     }
 }
 
 impl Default for LetterKnowledge {
     fn default() -> Self {
         Self {
-            correct: BTreeSet::new(),
-            incorrect: BTreeSet::new(),
+            good: BTreeSet::new(),
+            bad: BTreeSet::new(),
             unknown: BTreeSet::from(LetterKnowledge::ALPHABET),
         }
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct Game {
-    pub secret_word: PlayableWord,
-    pub word_comparisons: Vec<WordComparison>,
+    pub secret_word: LegalWord,
+    pub scores: Vec<WordScore>,
     pub letter_knowledge: LetterKnowledge,
 }
 
 impl Game {
     const MAXIMUM_GUESSES: i32 = 6;
 
-    pub fn new(secret_word: PlayableWord) -> Game {
+    pub fn new(secret_word: LegalWord) -> Game {
         Game {
             secret_word,
-            word_comparisons: Vec::new(),
+            scores: Vec::new(),
             letter_knowledge: LetterKnowledge::default(),
         }
     }
 
-    pub fn update(&self, prediction: PlayableWord) -> Self {
+    pub fn update(&self, prediction: LegalWord) -> Self {
         let mut updated_game = self.clone();
 
-        let guess_outcome = self.secret_word.compare_word(&prediction);
-        updated_game.word_comparisons.push(guess_outcome);
+        let score = self.secret_word.guess(&prediction);
+        updated_game.scores.push(score);
 
         let updated_knowledge = self.letter_knowledge.update(&self.secret_word, &prediction);
         updated_game.letter_knowledge = updated_knowledge;
@@ -191,15 +219,15 @@ impl Game {
     }
 
     pub fn remaining_guesses(&self) -> usize {
-        Game::MAXIMUM_GUESSES as usize - self.word_comparisons.len()
+        Game::MAXIMUM_GUESSES as usize - self.scores.len()
     }
 
-    pub fn last_comparison(&self) -> Option<&WordComparison> {
-        self.word_comparisons.last()
+    pub fn last_score(&self) -> Option<&WordScore> {
+        self.scores.last()
     }
 
     pub fn status(&self) -> GameStatus {
-        if self.last_comparison().is_some() && self.last_comparison().unwrap().is_correct() {
+        if self.last_score().is_some() && self.last_score().unwrap().is_winner() {
             GameStatus::Won
         } else if self.remaining_guesses() == 0 {
             GameStatus::Lost
@@ -211,45 +239,45 @@ impl Game {
 
 #[cfg(test)]
 mod tests {
-    use super::LetterComparison;
+    use super::LetterScore;
 
     #[test]
     fn formats_tile_guess_outcome() {
-        assert_eq!(format!("{}", LetterComparison::PlacedCorrectly), "X");
-        assert_eq!(format!("{}", LetterComparison::PresentElsewhere), "O");
-        assert_eq!(format!("{}", LetterComparison::NotPresent), "_");
+        assert_eq!(format!("{}", LetterScore::PlacedCorrectly), "X");
+        assert_eq!(format!("{}", LetterScore::PresentElsewhere), "O");
+        assert_eq!(format!("{}", LetterScore::NotPresent), "_");
     }
 
-    use super::WordComparison;
+    use super::WordScore;
 
-    fn correct_word_guess_outcome() -> WordComparison {
-        WordComparison(vec![
-            LetterComparison::PlacedCorrectly,
-            LetterComparison::PlacedCorrectly,
-            LetterComparison::PlacedCorrectly,
-            LetterComparison::PlacedCorrectly,
-            LetterComparison::PlacedCorrectly,
+    fn correct_word_guess_outcome() -> WordScore {
+        WordScore(vec![
+            LetterScore::PlacedCorrectly,
+            LetterScore::PlacedCorrectly,
+            LetterScore::PlacedCorrectly,
+            LetterScore::PlacedCorrectly,
+            LetterScore::PlacedCorrectly,
         ])
     }
 
-    fn incorrect_word_guess_outcome() -> WordComparison {
-        WordComparison(vec![
-            LetterComparison::PlacedCorrectly,
-            LetterComparison::PlacedCorrectly,
-            LetterComparison::NotPresent,
-            LetterComparison::PresentElsewhere,
-            LetterComparison::NotPresent,
+    fn incorrect_word_guess_outcome() -> WordScore {
+        WordScore(vec![
+            LetterScore::PlacedCorrectly,
+            LetterScore::PlacedCorrectly,
+            LetterScore::NotPresent,
+            LetterScore::PresentElsewhere,
+            LetterScore::NotPresent,
         ])
     }
 
     #[test]
     fn checks_correct_word_guess_outcome() {
-        assert!(correct_word_guess_outcome().is_correct());
+        assert!(correct_word_guess_outcome().is_winner());
     }
 
     #[test]
     fn checks_incorrect_word_guess_outcome() {
-        assert!(!incorrect_word_guess_outcome().is_correct());
+        assert!(!incorrect_word_guess_outcome().is_winner());
     }
 
     #[test]
@@ -257,70 +285,67 @@ mod tests {
         assert_eq!(format!("{}", incorrect_word_guess_outcome()), "XX_O_");
     }
 
-    use super::PlayableWord;
+    use super::LegalWord;
 
     #[test]
     fn formats_word() {
-        assert_eq!(format!("{}", PlayableWord::from("BRACK")), "BRACK");
+        assert_eq!(format!("{}", LegalWord::from("BRACK")), "BRACK");
     }
 
     #[test]
     fn accepts_valid_word_from_string() {
         assert_eq!(
-            PlayableWord::try_from(String::from("DRAKE")).unwrap(),
-            PlayableWord(String::from("DRAKE"))
+            LegalWord::try_from(String::from("DRAKE")).unwrap(),
+            LegalWord(String::from("DRAKE"))
         );
     }
 
     #[test]
     fn capitalizes_valid_word_from_string() {
         assert_eq!(
-            PlayableWord::try_from(String::from("Gumbo")).unwrap(),
-            PlayableWord(String::from("GUMBO"))
+            LegalWord::try_from(String::from("Gumbo")).unwrap(),
+            LegalWord(String::from("GUMBO"))
         );
     }
 
     #[test]
     fn rejects_short_word_from_string() {
-        assert!(PlayableWord::try_from(String::from("HEN")).is_err());
+        assert!(LegalWord::try_from(String::from("HEN")).is_err());
     }
 
     #[test]
     fn rejects_long_word_from_string() {
-        assert!(PlayableWord::try_from(String::from("PRAIRIE")).is_err());
+        assert!(LegalWord::try_from(String::from("PRAIRIE")).is_err());
     }
 
     #[test]
     fn rejects_non_basic_latin_word_from_string() {
-        assert!(PlayableWord::try_from(String::from("OBÉIR")).is_err());
+        assert!(LegalWord::try_from(String::from("OBÉIR")).is_err());
     }
 
     #[test]
     fn rejects_blank_word_from_string() {
-        assert!(PlayableWord::try_from(String::new()).is_err());
+        assert!(LegalWord::try_from(String::new()).is_err());
     }
 
     #[test]
     fn accepts_correct_guess() {
-        let word = PlayableWord::from("JANUS");
-        assert_eq!(word.compare_word(&word), correct_word_guess_outcome());
+        let word = LegalWord::from("JANUS");
+        assert_eq!(word.guess(&word), correct_word_guess_outcome());
     }
 
     #[test]
     fn rejects_incorrect_guess() {
-        let word = PlayableWord::from("SPICE");
-        let wrong_guess = PlayableWord::from("SPACE");
-        assert_ne!(
-            word.compare_word(&wrong_guess),
-            correct_word_guess_outcome()
-        );
+        let word = LegalWord::from("SPICE");
+        let wrong_guess = LegalWord::from("SPACE");
+        assert_ne!(word.guess(&wrong_guess), correct_word_guess_outcome());
     }
 
     #[test]
     fn evaluates_and_formats_guess() {
-        let word = PlayableWord::from("CRANE");
-        let wrong_guess = PlayableWord::from("BROWN");
-        let guess = word.compare_word(&wrong_guess);
+        let word = LegalWord::from("CRANE");
+        let wrong_guess = LegalWord::from("BROWN");
+        let guess = word.guess(&wrong_guess);
         assert_eq!(format!("{}", guess), "_X__O");
     }
 }

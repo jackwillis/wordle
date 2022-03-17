@@ -8,3 +8,4 @@ license = "MIT"
 
 [dependencies]
 rand = "0.8"
+derive_more = "0.99"
