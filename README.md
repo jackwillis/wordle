@@ -12,11 +12,11 @@ Command-line wordle clone in Rust.
 * The secret word is a random five-letter-long English word.
 * You may make up to six guesses.
 * You may guess any five-character sequence.
-* After you guess, the outcome of your guess will be shown.  
-    * If the first letter guessed matches the first letter of the secret word, the first symbol of the outcome will be 'X', likewise for second, third, forth, and fifth.
-    * 'O' means the letter is present in the word but not at that position.
-    * '_' means the letter is not present in the word.
-* Known good, bad, and unknown letters are shown to the side of the outcome.
+* After you guess, the outcome of your guess will be shown below.
+    * `X` represents a correct letter guess in the correct spot.
+    * `O` means the letter is part of the word but not at that position.
+    * `_` means the letter is not in the word.
+* Known good, bad, and unknown letters are also shown.
 
 ## Building this project
 
