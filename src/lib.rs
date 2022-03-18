@@ -71,28 +71,27 @@ impl fmt::Display for WordScore {
     }
 }
 
-/// A legal word according to the rules of wordle.
+/// A legal word according to the rules of wordle. A newtype adding constraints on [String].
 ///
 /// This type guarantees that:
 /// * The word is exactly five letters long.
 /// * The word contains only letters from the English alphabet.
-/// * The letters are uppercase.
+/// * The letters are stored as uppercase.
 ///
 /// ```rust
 /// use wordle::LegalWord;
 ///
-/// // The safe way to instantiate this type
-/// let adieu_heap: Result<LegalWord, _> = LegalWord::try_from(String::from("ADIEU"));
+/// // How to create this type
+/// let adieu: LegalWord = LegalWord::try_from("Adieu".to_owned()).unwrap();
 ///
-/// // Here the program will panic if the input does not meet the constraints for the type.
-/// let adieu_static = LegalWord::from("ADIEU");
+/// // Words are normalized to uppercase
+/// assert_eq!(String::from(adieu), "ADIEU");
 ///
-/// assert_eq!(adieu_heap.unwrap(), adieu_static);
-///
-/// let invalid_word = LegalWord::try_from(String::from("onomatopeia"));
+/// // Invalid words are not allowed
+/// let invalid_word: Result<LegalWord, &str> = LegalWord::try_from("onomatopeia");
 /// assert!(invalid_word.is_err());
 /// ```
-#[derive(Clone, Debug, PartialEq, derive_more::Display)]
+#[derive(Clone, Debug, PartialEq, derive_more::Display, derive_more::Into)]
 pub struct LegalWord(String);
 
 impl LegalWord {
@@ -141,11 +140,11 @@ impl TryFrom<String> for LegalWord {
     }
 }
 
-/// Creates a playable word from a known good input.
-/// Will panic if the input does not validate.
-impl From<&str> for LegalWord {
-    fn from(value: &str) -> Self {
-        LegalWord::try_from(String::from(value)).unwrap()
+impl TryFrom<&str> for LegalWord {
+    type Error = &'static str;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        LegalWord::try_from(value.to_owned())
     }
 }
 
@@ -254,110 +253,97 @@ impl Game {
 mod tests {
     use super::LetterScore;
 
+    const X: LetterScore = LetterScore::PlacedCorrectly;
+    const O: LetterScore = LetterScore::PresentElsewhere;
+    const U: LetterScore = LetterScore::NotPresent;
+
     #[test]
-    fn formats_tile_guess_outcome() {
-        assert_eq!(format!("{}", LetterScore::PlacedCorrectly), "X");
-        assert_eq!(format!("{}", LetterScore::PresentElsewhere), "O");
-        assert_eq!(format!("{}", LetterScore::NotPresent), "_");
+    fn formats_letter_score() {
+        assert_eq!(format!("{}", X), "X");
+        assert_eq!(format!("{}", O), "O");
+        assert_eq!(format!("{}", U), "_");
     }
 
     use super::WordScore;
 
-    fn correct_word_guess_outcome() -> WordScore {
-        WordScore(vec![
-            LetterScore::PlacedCorrectly,
-            LetterScore::PlacedCorrectly,
-            LetterScore::PlacedCorrectly,
-            LetterScore::PlacedCorrectly,
-            LetterScore::PlacedCorrectly,
-        ])
-    }
-
-    fn incorrect_word_guess_outcome() -> WordScore {
-        WordScore(vec![
-            LetterScore::PlacedCorrectly,
-            LetterScore::PlacedCorrectly,
-            LetterScore::NotPresent,
-            LetterScore::PresentElsewhere,
-            LetterScore::NotPresent,
-        ])
+    #[test]
+    fn checks_winning_word_score() {
+        assert!(WordScore(vec![X, X, X, X, X]).is_winner());
     }
 
     #[test]
-    fn checks_correct_word_guess_outcome() {
-        assert!(correct_word_guess_outcome().is_winner());
+    fn checks_losing_word_score() {
+        assert!(!WordScore(vec![X, X, U, O, U]).is_winner());
+        assert!(!WordScore(vec![O, O, O, O, O]).is_winner());
+        assert!(!WordScore(vec![U, U, U, U, U]).is_winner());
+        assert!(!WordScore(vec![X, X, X, X, O]).is_winner());
+        assert!(!WordScore(vec![U, X, X, X, X]).is_winner());
     }
 
     #[test]
-    fn checks_incorrect_word_guess_outcome() {
-        assert!(!incorrect_word_guess_outcome().is_winner());
-    }
-
-    #[test]
-    fn formats_word_guess_outcome() {
-        assert_eq!(format!("{}", incorrect_word_guess_outcome()), "XX_O_");
+    fn formats_word_score() {
+        assert_eq!(format!("{}", WordScore(vec![X, O, U, O, O])), "XO_OO");
+        assert_eq!(format!("{}", WordScore(vec![U, U, X, X, X])), "__XXX");
+        assert_eq!(format!("{}", WordScore(vec![O, X, O, O, U])), "OXOO_");
     }
 
     use super::LegalWord;
 
     #[test]
-    fn formats_word() {
-        assert_eq!(format!("{}", LegalWord::from("BRACK")), "BRACK");
+    fn creates_valid_word() {
+        assert_eq!(String::from(LegalWord::try_from("DRAKE").unwrap()), "DRAKE");
     }
 
     #[test]
-    fn accepts_valid_word_from_string() {
-        assert_eq!(
-            LegalWord::try_from(String::from("DRAKE")).unwrap(),
-            LegalWord(String::from("DRAKE"))
-        );
-    }
-
-    #[test]
-    fn capitalizes_valid_word_from_string() {
-        assert_eq!(
-            LegalWord::try_from(String::from("Gumbo")).unwrap(),
-            LegalWord(String::from("GUMBO"))
-        );
+    fn capitalizes_valid_word() {
+        assert_eq!(String::from(LegalWord::try_from("Gumbo").unwrap()), "GUMBO");
     }
 
     #[test]
     fn rejects_short_word_from_string() {
-        assert!(LegalWord::try_from(String::from("HEN")).is_err());
+        assert!(LegalWord::try_from("HEN").is_err());
     }
 
     #[test]
     fn rejects_long_word_from_string() {
-        assert!(LegalWord::try_from(String::from("PRAIRIE")).is_err());
+        assert!(LegalWord::try_from("PRAIRIE").is_err());
     }
 
     #[test]
     fn rejects_non_basic_latin_word_from_string() {
-        assert!(LegalWord::try_from(String::from("OBÉIR")).is_err());
+        assert!(LegalWord::try_from("OBÉIR").is_err());
     }
 
     #[test]
-    fn rejects_blank_word_from_string() {
-        assert!(LegalWord::try_from(String::new()).is_err());
+    fn rejects_blank_word() {
+        assert!(LegalWord::try_from("").is_err());
+    }
+
+    #[test]
+    fn formats_word() {
+        assert_eq!(
+            format!("{}", LegalWord::try_from("BRACK").unwrap()),
+            "BRACK"
+        );
     }
 
     #[test]
     fn accepts_correct_guess() {
-        let word = LegalWord::from("JANUS");
-        assert_eq!(word.guess(&word), correct_word_guess_outcome());
+        let word = LegalWord::try_from("JANUS").unwrap();
+        assert_eq!(word.guess(&word), WordScore(vec![X, X, X, X, X]));
     }
 
     #[test]
     fn rejects_incorrect_guess() {
-        let word = LegalWord::from("SPICE");
-        let wrong_guess = LegalWord::from("SPACE");
-        assert_ne!(word.guess(&wrong_guess), correct_word_guess_outcome());
+        let word = LegalWord::try_from("SPICE").unwrap();
+        let wrong_guess = LegalWord::try_from("SPACE").unwrap();
+        assert_eq!(word.guess(&wrong_guess), WordScore(vec![X, X, U, X, X]));
     }
 
     #[test]
     fn evaluates_and_formats_guess() {
-        let word = LegalWord::from("CRANE");
-        let wrong_guess = LegalWord::from("BROWN");
+        let word = LegalWord::try_from("CRANE").unwrap();
+        let wrong_guess = LegalWord::try_from("BROWN").unwrap();
         let guess = word.guess(&wrong_guess);
         assert_eq!(format!("{}", guess), "_X__O");
     }
