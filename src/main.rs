@@ -20,7 +20,7 @@ fn main() -> io::Result<()> {
                 // this is where the game state is updated.
                 // the score of prediction is added to `game.scores`
                 // the player knowledge of good and bad letters is updated
-                game = game.update(prediction);
+                game = game.make_play(prediction);
 
                 print!("  {} | ", game.last_score().unwrap());
 

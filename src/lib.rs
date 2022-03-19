@@ -81,8 +81,7 @@ impl fmt::Display for WordScore {
 /// ```rust
 /// use wordle::LegalWord;
 ///
-/// // How to create this type
-/// let adieu: LegalWord = LegalWord::try_from("Adieu".to_owned()).unwrap();
+/// let adieu: LegalWord = LegalWord::try_from("Adieu").unwrap();
 ///
 /// // Words are normalized to uppercase
 /// assert_eq!(String::from(adieu), "ADIEU");
@@ -218,7 +217,7 @@ impl Game {
         }
     }
 
-    pub fn update(&self, prediction: LegalWord) -> Self {
+    pub fn make_play(&self, prediction: LegalWord) -> Self {
         let mut updated_game = self.clone();
 
         let score = self.secret_word.guess(&prediction);
