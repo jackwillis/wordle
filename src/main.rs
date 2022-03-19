@@ -13,6 +13,8 @@ fn main() {
 // Recursive
 fn game_loop(game: Game) {
     match game.status() {
+        GameStatus::Won => println!("You're a winner, baby!"),
+        GameStatus::Lost => println!("You lost :(\nThe word was: {}", game.secret_word),
         GameStatus::Active => {
             print_prompt(&game);
 
@@ -23,11 +25,12 @@ fn game_loop(game: Game) {
                     print_player_knowledge(&updated_game);
                     game_loop(updated_game); // Tail recursion
                 }
-                Err(msg) => println!("Invalid word: {}", msg),
+                Err(msg) => {
+                    println!("Invalid word: {}", msg);
+                    game_loop(game); // Tail recursion
+                }
             }
         }
-        GameStatus::Won => println!("You're a winner, baby!"),
-        GameStatus::Lost => println!("You lost :(\nThe word was: {}", game.secret_word),
     }
 }
 
