@@ -10,36 +10,14 @@ fn main() -> io::Result<()> {
     let mut game = Game::new(wordle::dictionary::random_word());
 
     while game.status() == GameStatus::Active {
-        print!("{} ", game.remaining_guesses());
-        io::stdout().flush()?;
+        print_prompt(&game)?;
 
         let user_input = LegalWord::try_from(read_line()?);
 
         match user_input {
             Ok(prediction) => {
-                // this is where the game state is updated.
-                // the score of prediction is added to `game.scores`
-                // the player knowledge of good and bad letters is updated
                 game = game.make_play(prediction);
-
-                print!("  {} | ", game.last_score().unwrap());
-
-                print!("good: ");
-                for c in &game.letter_knowledge.good {
-                    print!("{}", c);
-                }
-
-                print!(" | bad: ");
-                for c in &game.letter_knowledge.bad {
-                    print!("{}", c);
-                }
-
-                print!(" | unknown: ");
-                for c in &game.letter_knowledge.unknown {
-                    print!("{}", c);
-                }
-
-                println!();
+                print_player_knowledge(&game);
             }
             Err(msg) => {
                 println!("Input error: {}", msg);
@@ -54,6 +32,32 @@ fn main() -> io::Result<()> {
     }
 
     Ok(())
+}
+
+fn print_prompt(game: &Game) -> io::Result<()> {
+    print!("{} ", game.remaining_guesses());
+    io::stdout().flush()
+}
+
+fn print_player_knowledge(game: &Game) {
+    print!("  {} | ", game.last_score().unwrap());
+
+    print!("good: ");
+    for c in &game.letter_knowledge.good {
+        print!("{}", c);
+    }
+
+    print!(" | bad: ");
+    for c in &game.letter_knowledge.bad {
+        print!("{}", c);
+    }
+
+    print!(" | unknown: ");
+    for c in &game.letter_knowledge.unknown {
+        print!("{}", c);
+    }
+
+    println!();
 }
 
 fn read_line() -> io::Result<String> {
