@@ -3,40 +3,37 @@ use std::io::Write;
 
 use wordle::{Game, GameStatus, LegalWord};
 
-fn main() -> io::Result<()> {
+fn main() {
     println!("WORDLE!");
 
-    // this object is the state for the whole program
-    let mut game = Game::new(wordle::dictionary::random_word());
-
-    while game.status() == GameStatus::Active {
-        print_prompt(&game)?;
-
-        let user_input = LegalWord::try_from(read_line()?);
-
-        match user_input {
-            Ok(prediction) => {
-                game = game.make_play(prediction);
-                print_player_knowledge(&game);
-            }
-            Err(msg) => {
-                println!("Input error: {}", msg);
-            }
-        }
-    }
-
-    match game.status() {
-        GameStatus::Lost => println!("You lost :(\nThe word was: {}", game.secret_word),
-        GameStatus::Won => println!("You're a winner, baby!"),
-        _ => unreachable!(),
-    }
-
-    Ok(())
+    let game = Game::new(wordle::dictionary::random_word());
+    game_loop(game);
 }
 
-fn print_prompt(game: &Game) -> io::Result<()> {
+// Recursive
+fn game_loop(game: Game) {
+    match game.status() {
+        GameStatus::Active => {
+            print_prompt(&game);
+
+            let user_input = LegalWord::try_from(read_line());
+            match user_input {
+                Ok(prediction) => {
+                    let updated_game = game.make_play(prediction);
+                    print_player_knowledge(&updated_game);
+                    game_loop(updated_game); // Tail recursion
+                }
+                Err(msg) => println!("Invalid word: {}", msg),
+            }
+        }
+        GameStatus::Won => println!("You're a winner, baby!"),
+        GameStatus::Lost => println!("You lost :(\nThe word was: {}", game.secret_word),
+    }
+}
+
+fn print_prompt(game: &Game) {
     print!("{} ", game.remaining_guesses());
-    io::stdout().flush()
+    io::stdout().flush().expect("Failed to flush stdout.");
 }
 
 fn print_player_knowledge(game: &Game) {
@@ -60,8 +57,10 @@ fn print_player_knowledge(game: &Game) {
     println!();
 }
 
-fn read_line() -> io::Result<String> {
+fn read_line() -> String {
     let mut input_buffer = String::new();
-    io::stdin().read_line(&mut input_buffer)?;
-    Ok(String::from(input_buffer.trim()))
+    io::stdin()
+        .read_line(&mut input_buffer)
+        .expect("Failed to read from stdin.");
+    String::from(input_buffer.trim())
 }
