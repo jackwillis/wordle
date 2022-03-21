@@ -49,10 +49,7 @@ impl fmt::Display for LetterScore {
 /// assert!(winning_score.is_winner());
 /// ```
 #[derive(Clone, Debug, PartialEq)]
-pub struct WordScore(
-    /// The hidden data of this struct.
-    pub Vec<LetterScore>,
-);
+pub struct WordScore(pub Vec<LetterScore>);
 
 impl WordScore {
     /// Returns true if all letters have been guessed correctly.
@@ -79,21 +76,21 @@ impl fmt::Display for WordScore {
 /// * The letters are stored as uppercase.
 ///
 /// ```rust
-/// use wordle::LegalWord;
+/// use wordle::Word;
 ///
-/// let adieu: LegalWord = LegalWord::try_from("Adieu").unwrap();
+/// let adieu: Word = Word::try_from("Adieu").unwrap();
 ///
 /// // Words are normalized to uppercase
 /// assert_eq!(String::from(adieu), "ADIEU");
 ///
 /// // Invalid words are not allowed
-/// let invalid_word: Result<LegalWord, &str> = LegalWord::try_from("onomatopeia");
+/// let invalid_word: Result<Word, &str> = Word::try_from("onomatopeia");
 /// assert!(invalid_word.is_err());
 /// ```
 #[derive(Clone, Debug, PartialEq, derive_more::Display, derive_more::Into)]
-pub struct LegalWord(String);
+pub struct Word(String);
 
-impl LegalWord {
+impl Word {
     /// Returns an iterator over the letters of the word.
     pub fn letters(&self) -> Chars {
         self.0.chars()
@@ -122,10 +119,10 @@ impl LegalWord {
     }
 }
 
-impl TryFrom<String> for LegalWord {
+impl TryFrom<String> for Word {
     type Error = &'static str;
 
-    /// Validates and creates a [LegalWord] at runtime.
+    /// Validates and creates a [Word] at runtime.
     /// Normalizes to uppercase, so words have only one representation.
     fn try_from(value: String) -> Result<Self, Self::Error> {
         if value.len() != 5 {
@@ -134,16 +131,16 @@ impl TryFrom<String> for LegalWord {
             Err("Word must contain only letters from the English alphabet.")
         } else {
             let uppercased = value.chars().flat_map(|c| c.to_uppercase()).collect();
-            Ok(LegalWord(uppercased))
+            Ok(Word(uppercased))
         }
     }
 }
 
-impl TryFrom<&str> for LegalWord {
+impl TryFrom<&str> for Word {
     type Error = &'static str;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
-        LegalWord::try_from(value.to_owned())
+        Word::try_from(value.to_owned())
     }
 }
 
@@ -168,7 +165,7 @@ impl LetterKnowledge {
         'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
     ];
 
-    pub fn update(&self, secret_word: &LegalWord, prediction: &LegalWord) -> Self {
+    pub fn update(&self, secret_word: &Word, prediction: &Word) -> Self {
         let mut knowledge = self.clone();
 
         // Receive information from the letters in our guess
@@ -201,7 +198,7 @@ impl Default for LetterKnowledge {
 
 #[derive(Clone)]
 pub struct Game {
-    pub secret_word: LegalWord,
+    pub secret_word: Word,
     pub scores: Vec<WordScore>,
     pub letter_knowledge: LetterKnowledge,
 }
@@ -209,7 +206,7 @@ pub struct Game {
 impl Game {
     const MAXIMUM_GUESSES: i32 = 6;
 
-    pub fn new(secret_word: LegalWord) -> Game {
+    pub fn new(secret_word: Word) -> Game {
         Game {
             secret_word,
             scores: Vec::new(),
@@ -217,7 +214,7 @@ impl Game {
         }
     }
 
-    pub fn make_play(&self, prediction: LegalWord) -> Self {
+    pub fn with_prediction(&self, prediction: Word) -> Self {
         let mut updated_game = self.clone();
 
         let score = self.secret_word.guess(&prediction);
@@ -286,63 +283,60 @@ mod tests {
         assert_eq!(format!("{}", WordScore(vec![O, X, O, O, U])), "OXOO_");
     }
 
-    use super::LegalWord;
+    use super::Word;
 
     #[test]
     fn creates_valid_word() {
-        assert_eq!(String::from(LegalWord::try_from("DRAKE").unwrap()), "DRAKE");
+        assert_eq!(String::from(Word::try_from("DRAKE").unwrap()), "DRAKE");
     }
 
     #[test]
     fn capitalizes_valid_word() {
-        assert_eq!(String::from(LegalWord::try_from("Gumbo").unwrap()), "GUMBO");
+        assert_eq!(String::from(Word::try_from("Gumbo").unwrap()), "GUMBO");
     }
 
     #[test]
     fn rejects_short_word_from_string() {
-        assert!(LegalWord::try_from("HEN").is_err());
+        assert!(Word::try_from("HEN").is_err());
     }
 
     #[test]
     fn rejects_long_word_from_string() {
-        assert!(LegalWord::try_from("PRAIRIE").is_err());
+        assert!(Word::try_from("PRAIRIE").is_err());
     }
 
     #[test]
     fn rejects_non_basic_latin_word_from_string() {
-        assert!(LegalWord::try_from("OBÉIR").is_err());
+        assert!(Word::try_from("OBÉIR").is_err());
     }
 
     #[test]
     fn rejects_blank_word() {
-        assert!(LegalWord::try_from("").is_err());
+        assert!(Word::try_from("").is_err());
     }
 
     #[test]
     fn formats_word() {
-        assert_eq!(
-            format!("{}", LegalWord::try_from("BRACK").unwrap()),
-            "BRACK"
-        );
+        assert_eq!(format!("{}", Word::try_from("BRACK").unwrap()), "BRACK");
     }
 
     #[test]
     fn accepts_correct_guess() {
-        let word = LegalWord::try_from("JANUS").unwrap();
+        let word = Word::try_from("JANUS").unwrap();
         assert_eq!(word.guess(&word), WordScore(vec![X, X, X, X, X]));
     }
 
     #[test]
     fn rejects_incorrect_guess() {
-        let word = LegalWord::try_from("SPICE").unwrap();
-        let wrong_guess = LegalWord::try_from("SPACE").unwrap();
+        let word = Word::try_from("SPICE").unwrap();
+        let wrong_guess = Word::try_from("SPACE").unwrap();
         assert_eq!(word.guess(&wrong_guess), WordScore(vec![X, X, U, X, X]));
     }
 
     #[test]
     fn evaluates_and_formats_guess() {
-        let word = LegalWord::try_from("CRANE").unwrap();
-        let wrong_guess = LegalWord::try_from("BROWN").unwrap();
+        let word = Word::try_from("CRANE").unwrap();
+        let wrong_guess = Word::try_from("BROWN").unwrap();
         let guess = word.guess(&wrong_guess);
         assert_eq!(format!("{}", guess), "_X__O");
     }

@@ -1,27 +1,32 @@
 use std::io;
 use std::io::Write;
 
-use wordle::{Game, GameStatus, LegalWord};
+use wordle::{
+    Game,
+    GameStatus::{Active, Lost, Won},
+    Word,
+};
 
 fn main() {
     println!("WORDLE!");
 
-    let game = Game::new(wordle::dictionary::random_word());
+    let secret_word = wordle::dictionary::random_word();
+    let game = Game::new(secret_word);
+
     game_loop(game);
 }
 
 // Recursive
 fn game_loop(game: Game) {
     match game.status() {
-        GameStatus::Won => println!("You're a winner, baby!"),
-        GameStatus::Lost => println!("You lost :(\nThe word was: {}", game.secret_word),
-        GameStatus::Active => {
+        Won => println!("You're a winner, baby!"),
+        Lost => println!("You lost :(\nThe word was: {}", game.secret_word),
+        Active => {
             print_prompt(&game);
 
-            let user_input = LegalWord::try_from(read_line());
-            match user_input {
+            match try_read_word() {
                 Ok(prediction) => {
-                    let updated_game = game.make_play(prediction);
+                    let updated_game = game.with_prediction(prediction);
                     print_player_knowledge(&updated_game);
                     game_loop(updated_game); // Tail recursion
                 }
@@ -58,6 +63,10 @@ fn print_player_knowledge(game: &Game) {
     }
 
     println!();
+}
+
+fn try_read_word() -> Result<Word, &'static str> {
+    Word::try_from(read_line())
 }
 
 fn read_line() -> String {

@@ -1,4 +1,4 @@
-use crate::LegalWord;
+use crate::Word;
 
 use rand::seq::SliceRandom;
 
@@ -9,7 +9,7 @@ const DICTIONARY: &[&str] = &[
 ];
 
 /// Chooses a random [LegalWord] from a static dictionary.
-pub fn random_word() -> LegalWord {
+pub fn random_word() -> Word {
     let word = *DICTIONARY.choose(&mut rand::thread_rng()).unwrap();
-    LegalWord::try_from(word.to_owned()).unwrap()
+    Word::try_from(word.to_owned()).unwrap()
 }
