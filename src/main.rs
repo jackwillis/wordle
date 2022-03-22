@@ -10,7 +10,7 @@ use wordle::{
 fn main() {
     println!("WORDLE!");
 
-    let secret_word = wordle::dictionary::random_word();
+    let secret_word = wordle::random_word();
     let game = Game::new(secret_word);
 
     game_loop(game);
