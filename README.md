@@ -29,7 +29,8 @@ Rust-analyzer is better and active and it's being phased in to replace the other
 
 All build tasks are handled with Rust's command-line tool, cargo,
 which automagically handles dependencies and compilation.
-The command [`cargo test`](https://doc.rust-lang.org/cargo/commands/cargo-test.html) will run tests
+The command [`cargo test`](https://doc.rust-lang.org/cargo/commands/cargo-test.html) will run tests,
+[`cargo doc --open`](https://doc.rust-lang.org/cargo/commands/cargo-doc.html) will open documentation,
 and [`cargo run`](https://doc.rust-lang.org/cargo/commands/cargo-run.html) will run the binary.
 See: [The Cargo Book](https://doc.rust-lang.org/cargo/index.html),
 "[Build Commands](https://doc.rust-lang.org/cargo/commands/build-commands.html)." 
