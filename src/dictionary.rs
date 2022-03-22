@@ -8,7 +8,7 @@ const DICTIONARY: &[&str] = &[
     "HEATH", "DWARF", "MODEL", "KARMA", "STINK", "GRADE", "QUIET", "BENCH", "ABATE", "FEIGN",
 ];
 
-/// Chooses a random [LegalWord] from a static dictionary.
+/// Chooses a random [Word] from a static dictionary.
 pub fn random_word() -> Word {
     let word = *DICTIONARY.choose(&mut rand::thread_rng()).unwrap();
     Word::try_from(word.to_owned()).unwrap()
