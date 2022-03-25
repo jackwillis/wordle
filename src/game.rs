@@ -72,7 +72,7 @@ impl Game {
         }
     }
 
-    pub fn with_prediction(&self, prediction: Word) -> Self {
+    pub fn add_prediction(&self, prediction: Word) -> Self {
         let mut updated_game = self.clone();
 
         let score = self.secret_word.guess(&prediction);
