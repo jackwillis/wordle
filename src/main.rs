@@ -1,12 +1,11 @@
 use std::io;
 use std::io::Write;
 
-use regex::Regex;
-
 use wordle::{Game, GameStatus, Word};
 
 fn main() {
     println!("WORDLE!");
+    println!("Type \"help\" for more information.");
 
     let secret_word = wordle::random_word();
     let game = Game::new(secret_word);
@@ -14,10 +13,27 @@ fn main() {
     game_loop(game);
 }
 
+/// Represents the result of parsing user input
 enum Command {
-    Predict(Word),
+    /// Display the help message
     HelpMessage,
+    /// Make a legal play
+    LegalPlay(Word),
+    /// Command could not be understood
     SyntaxError(&'static str),
+}
+
+impl Command {
+    fn parse(input: &str) -> Command {
+        if input.to_lowercase() == "help" {
+            Command::HelpMessage
+        } else {
+            match Word::try_from(input) {
+                Ok(prediction) => Command::LegalPlay(prediction), // input was a legal word
+                Err(msg) => Command::SyntaxError(msg),
+            }
+        }
+    }
 }
 
 // Recursive
@@ -28,37 +44,24 @@ fn game_loop(game: Game) {
         GameStatus::Active => {
             print_prompt(&game);
 
-            match get_command() {
-                Command::Predict(prediction) => {
-                    let updated_game = game.with_prediction(prediction);
-                    print_player_knowledge(&updated_game);
-                    game_loop(updated_game); // Tail recursion
+            // get next command, execute and recurse back into loop
+            let input = read_line();
+            match Command::parse(&input) {
+                Command::LegalPlay(prediction) => {
+                    // create new game object on heap
+                    let new_game = game.with_prediction(prediction);
+                    print_player_knowledge(&new_game);
+                    game_loop(new_game);
                 }
                 Command::HelpMessage => {
-                    println!("Help message");
-                    game_loop(game); // Tail recursion
+                    println!("Example help message");
+                    game_loop(game);
                 }
                 Command::SyntaxError(msg) => {
                     println!("Invalid word: {}", msg);
-                    game_loop(game); // Tail recursion
+                    game_loop(game);
                 }
             }
-        }
-    }
-}
-
-fn get_command() -> Command {
-    // matches "h", "help", or "?", case-insensitive.
-    let help_command = Regex::new(r"(?i)(h(elp)?|\?)").unwrap();
-
-    let user_input = read_line();
-
-    if user_input == "help" {
-        Command::HelpMessage
-    } else {
-        match Word::try_from(user_input) {
-            Ok(prediction) => Command::Predict(prediction),
-            Err(msg) => Command::SyntaxError(msg),
         }
     }
 }
