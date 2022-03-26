@@ -1,6 +1,7 @@
 use crate::Word;
 
 use rand::seq::SliceRandom;
+use std::str::FromStr;
 
 // Static dictionary. Every item is guaranteed to be a valid [LegalWord].
 const DICTIONARY: &[&str] = &[
@@ -11,5 +12,5 @@ const DICTIONARY: &[&str] = &[
 /// Chooses a random [Word] from a static dictionary.
 pub fn random_word() -> Word {
     let word = *DICTIONARY.choose(&mut rand::thread_rng()).unwrap();
-    Word::try_from(word.to_owned()).unwrap()
+    Word::from_str(word).unwrap()
 }

@@ -92,7 +92,7 @@ impl Game {
         self.scores.last()
     }
 
-    pub fn status(&self) -> GameStatus {
+    pub fn calculate_status(&self) -> GameStatus {
         if self.last_score().is_some() && self.last_score().unwrap().is_winner() {
             GameStatus::Won
         } else if self.remaining_guesses() == 0 {

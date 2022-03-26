@@ -1,5 +1,6 @@
 use std::fmt;
 use std::str::Chars;
+use std::str::FromStr;
 
 extern crate derive_more;
 
@@ -74,14 +75,15 @@ impl fmt::Display for WordScore {
 ///
 /// ```rust
 /// use wordle::Word;
+/// use std::str::FromStr;
 ///
-/// let adieu: Word = Word::try_from("Adieu").unwrap();
+/// let adieu: Word = Word::from_str("Adieu").unwrap();
 ///
 /// // Words are normalized to uppercase
 /// assert_eq!(String::from(adieu), "ADIEU");
 ///
 /// // Invalid words are not allowed
-/// let invalid_word: Result<Word, &str> = Word::try_from("onomatopeia");
+/// let invalid_word: Result<Word, &str> = Word::from_str("onomatopeia");
 /// assert!(invalid_word.is_err());
 /// ```
 #[derive(Clone, Debug, PartialEq, derive_more::Display, derive_more::Into)]
@@ -116,34 +118,27 @@ impl Word {
     }
 }
 
-impl TryFrom<String> for Word {
-    type Error = &'static str;
+impl FromStr for Word {
+    type Err = &'static str;
 
     /// Validates and creates a [Word] at runtime.
     /// Normalizes to uppercase, so words have only one representation.
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        if value.len() != 5 {
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if s.len() != 5 {
             Err("Word must be five letters long.")
-        } else if value.chars().any(|c| !c.is_ascii_alphabetic()) {
+        } else if s.chars().any(|c| !c.is_ascii_alphabetic()) {
             Err("Word must contain only letters from the English alphabet.")
         } else {
-            let uppercased = value.chars().flat_map(|c| c.to_uppercase()).collect();
-            Ok(Word(uppercased))
+            Ok(Word(s.to_uppercase()))
         }
-    }
-}
-
-impl TryFrom<&str> for Word {
-    type Error = &'static str;
-
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        Word::try_from(value.to_owned())
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::LetterScore;
+
+    use std::str::FromStr;
 
     const X: LetterScore = LetterScore::PlacedCorrectly;
     const O: LetterScore = LetterScore::PresentElsewhere;
@@ -183,56 +178,56 @@ mod tests {
 
     #[test]
     fn creates_valid_word() {
-        assert_eq!(String::from(Word::try_from("DRAKE").unwrap()), "DRAKE");
+        assert_eq!(String::from(Word::from_str("DRAKE").unwrap()), "DRAKE");
     }
 
     #[test]
     fn capitalizes_valid_word() {
-        assert_eq!(String::from(Word::try_from("Gumbo").unwrap()), "GUMBO");
+        assert_eq!(String::from(Word::from_str("Gumbo").unwrap()), "GUMBO");
     }
 
     #[test]
     fn rejects_short_word_from_string() {
-        assert!(Word::try_from("HEN").is_err());
+        assert!(Word::from_str("HEN").is_err());
     }
 
     #[test]
     fn rejects_long_word_from_string() {
-        assert!(Word::try_from("PRAIRIE").is_err());
+        assert!(Word::from_str("PRAIRIE").is_err());
     }
 
     #[test]
     fn rejects_non_basic_latin_word_from_string() {
-        assert!(Word::try_from("OBÉIR").is_err());
+        assert!(Word::from_str("OBÉIR").is_err());
     }
 
     #[test]
     fn rejects_blank_word() {
-        assert!(Word::try_from("").is_err());
+        assert!(Word::from_str("").is_err());
     }
 
     #[test]
     fn formats_word() {
-        assert_eq!(format!("{}", Word::try_from("BRACK").unwrap()), "BRACK");
+        assert_eq!(format!("{}", Word::from_str("BRACK").unwrap()), "BRACK");
     }
 
     #[test]
     fn accepts_correct_guess() {
-        let word = Word::try_from("JANUS").unwrap();
+        let word = Word::from_str("JANUS").unwrap();
         assert_eq!(word.guess(&word), WordScore(vec![X, X, X, X, X]));
     }
 
     #[test]
     fn rejects_incorrect_guess() {
-        let word = Word::try_from("SPICE").unwrap();
-        let wrong_guess = Word::try_from("SPACE").unwrap();
+        let word = Word::from_str("SPICE").unwrap();
+        let wrong_guess = Word::from_str("SPACE").unwrap();
         assert_eq!(word.guess(&wrong_guess), WordScore(vec![X, X, U, X, X]));
     }
 
     #[test]
     fn evaluates_and_formats_guess() {
-        let word = Word::try_from("CRANE").unwrap();
-        let wrong_guess = Word::try_from("BROWN").unwrap();
+        let word = Word::from_str("CRANE").unwrap();
+        let wrong_guess = Word::from_str("BROWN").unwrap();
         let guess = word.guess(&wrong_guess);
         assert_eq!(format!("{}", guess), "_X__O");
     }

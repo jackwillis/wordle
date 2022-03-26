@@ -1,5 +1,6 @@
 use std::io;
 use std::io::Write;
+use std::str::FromStr;
 
 use wordle::{Game, GameStatus, Word};
 
@@ -33,45 +34,41 @@ enum Command {
 
 impl Command {
     /// Parses user input from command line.
-    /// In the normal case, user input is a valid word,
-    /// and this function will return a [Command::MakeLegalPlay(Word)].
     fn parse(input: &str) -> Command {
         let input = input.trim();
+
         if input.is_empty() {
-            Command::NoOp
+            return Command::NoOp;
         } else if input.to_lowercase() == "help" {
-            Command::DisplayHelpMessage
-        } else {
-            // try to parse a word
-            match Word::try_from(input) {
-                Ok(prediction) => Command::MakeLegalPlay(prediction), // input was a legal word
-                Err(msg) => Command::SyntaxError(msg),
-            }
+            return Command::DisplayHelpMessage;
+        }
+
+        match Word::from_str(input) {
+            Ok(prediction) => Command::MakeLegalPlay(prediction),
+            Err(msg) => Command::SyntaxError(msg),
         }
     }
 }
 
-/// read user input - parse into [Command]
-/// evaluate new game state - with [Game] and [Word]
-/// print player knowledge - represented in [WordScore] and [LetterKnowledge]
-/// loop - terminates when `game.status()` is no longer [GameStatus::Active].
+/// Read user input - parse into [Command].
+/// Evaluate new game state - with [Game] and [Word].
+/// Print player's knowledge - represented in [WordScore] and [LetterKnowledge].
+/// Loop - terminates when `game.calculate_status()` is no longer [GameStatus::Active].
 fn game_loop(game: Game) {
-    match game.status() {
-        // Base case for recursion
+    match game.calculate_status() {
+        // Base cases for recursion.
         GameStatus::Won => println!("You're a winner, baby!"),
         GameStatus::Lost => println!("You lost :(\nThe word was: {}", game.secret_word),
 
-        // Entry point and main loop
+        // Entry point and normal case.
+        // Ends with tail recursion.
         GameStatus::Active => {
             print_prompt(&game);
 
             let input = read_line();
 
-            // at the end here, tail recursion
             match Command::parse(&input) {
-                // normal case - user played valid word
                 Command::MakeLegalPlay(prediction) => {
-                    // evaluate prediction - create new game state on heap
                     let new_game = game.add_prediction(prediction);
 
                     print_player_knowledge(&new_game);
@@ -96,7 +93,7 @@ fn read_line() -> String {
     io::stdin()
         .read_line(&mut input_buffer)
         .expect("Failed to read from stdin.");
-    String::from(input_buffer)
+    input_buffer
 }
 
 fn print_prompt(game: &Game) {
