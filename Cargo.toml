@@ -5,5 +5,4 @@ edition = "2021"
 license = "MIT"
 
 [dependencies]
-derive_more = "0.99"
 rand = "0.8"

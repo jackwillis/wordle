@@ -2,8 +2,6 @@ use std::fmt;
 use std::str::Chars;
 use std::str::FromStr;
 
-extern crate derive_more;
-
 /// The player's score for one letter of a guess.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum LetterScore {
@@ -86,8 +84,24 @@ impl fmt::Display for WordScore {
 /// let invalid_word: Result<Word, &str> = Word::from_str("onomatopeia");
 /// assert!(invalid_word.is_err());
 /// ```
-#[derive(Clone, Debug, PartialEq, derive_more::Display, derive_more::Into)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Word(String);
+
+impl FromStr for Word {
+    type Err = &'static str;
+
+    /// Validates and creates a [Word] at runtime.
+    /// Normalizes to uppercase, so words have only one representation.
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if s.len() != 5 {
+            Err("Word must be five letters long.")
+        } else if s.chars().any(|c| !c.is_ascii_alphabetic()) {
+            Err("Word must contain only letters from the English alphabet.")
+        } else {
+            Ok(Word(s.to_uppercase()))
+        }
+    }
+}
 
 impl Word {
     /// Returns an iterator over the letters of the word.
@@ -118,19 +132,15 @@ impl Word {
     }
 }
 
-impl FromStr for Word {
-    type Err = &'static str;
+impl fmt::Display for Word {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
 
-    /// Validates and creates a [Word] at runtime.
-    /// Normalizes to uppercase, so words have only one representation.
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        if s.len() != 5 {
-            Err("Word must be five letters long.")
-        } else if s.chars().any(|c| !c.is_ascii_alphabetic()) {
-            Err("Word must contain only letters from the English alphabet.")
-        } else {
-            Ok(Word(s.to_uppercase()))
-        }
+impl From<Word> for String {
+    fn from(word: Word) -> Self {
+        word.0
     }
 }
 
