@@ -50,10 +50,7 @@ impl Command {
     }
 }
 
-/// Read user input - parse into [Command].
-/// Evaluate new game state - with [Game] and [Word].
-/// Print player's knowledge - represented in [WordScore] and [LetterKnowledge].
-/// Loop - terminates when `game.calculate_status()` is no longer [GameStatus::Active].
+/// Read--evaluate--print--loop
 fn game_loop(game: Game) {
     match game.calculate_status() {
         // Base cases for recursion.
@@ -65,12 +62,14 @@ fn game_loop(game: Game) {
         GameStatus::Active => {
             print_prompt(&game);
 
+            // Read from command line
             let input = read_line();
 
+            // Evaluate, print, loop
             match Command::parse(&input) {
                 // Normal case
                 Command::ValidWord(word) => {
-                    // Evaluate new game state
+                    // Calculate new game state
                     let new_game = game.add_prediction(word);
 
                     print_player_knowledge(&new_game);
@@ -90,6 +89,7 @@ fn game_loop(game: Game) {
     }
 }
 
+/// Reads a line from the console into an owned [String].
 fn read_line() -> String {
     let mut input_buffer = String::new();
     io::stdin()
@@ -98,11 +98,13 @@ fn read_line() -> String {
     input_buffer
 }
 
+/// Prints a command line prompt of the number of remaining guesses.
 fn print_prompt(game: &Game) {
     print!("{} ", game.remaining_guesses());
     io::stdout().flush().expect("Failed to flush stdout.");
 }
 
+/// Prints the score for the last play, and the player's knowledge of "good" and "bad" letters.
 fn print_player_knowledge(game: &Game) {
     let last_score = game.last_score().unwrap();
     print!("  {} | ", last_score);
