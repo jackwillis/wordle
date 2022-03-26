@@ -26,9 +26,9 @@ After you guess, the outcome of your guess will be shown below.
 
 /// Represents user input from command line.
 enum Command {
-    MakeLegalPlay(Word),
-    DisplayHelpMessage,
-    SyntaxError(&'static str),
+    ValidWord(Word),
+    ParseWordError(&'static str),
+    HelpMessage,
     NoOp,
 }
 
@@ -40,12 +40,12 @@ impl Command {
         if input.is_empty() {
             return Command::NoOp;
         } else if input.to_lowercase() == "help" {
-            return Command::DisplayHelpMessage;
+            return Command::HelpMessage;
         }
 
         match Word::from_str(input) {
-            Ok(word) => Command::MakeLegalPlay(word),
-            Err(msg) => Command::SyntaxError(msg),
+            Ok(word) => Command::ValidWord(word),
+            Err(msg) => Command::ParseWordError(msg),
         }
     }
 }
@@ -69,19 +69,19 @@ fn game_loop(game: Game) {
 
             match Command::parse(&input) {
                 // Normal case
-                Command::MakeLegalPlay(word) => {
+                Command::ValidWord(word) => {
                     // Evaluate new game state
                     let new_game = game.add_prediction(word);
 
                     print_player_knowledge(&new_game);
                     game_loop(new_game);
                 }
-                Command::DisplayHelpMessage => {
-                    println!("{}", HELP_MESSAGE);
+                Command::ParseWordError(msg) => {
+                    println!("Invalid word: {}", msg);
                     game_loop(game);
                 }
-                Command::SyntaxError(msg) => {
-                    println!("Invalid word: {}", msg);
+                Command::HelpMessage => {
+                    println!("{}", HELP_MESSAGE);
                     game_loop(game);
                 }
                 Command::NoOp => game_loop(game),
