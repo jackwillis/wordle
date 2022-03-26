@@ -24,7 +24,7 @@ After you guess, the outcome of your guess will be shown below.
     * _ means the letter is not in the word.
     * Known good, bad, and unknown letters are also shown.";
 
-/// Represents the result of parsing user input
+/// Represents user input from command line.
 enum Command {
     MakeLegalPlay(Word),
     DisplayHelpMessage,
@@ -44,7 +44,7 @@ impl Command {
         }
 
         match Word::from_str(input) {
-            Ok(prediction) => Command::MakeLegalPlay(prediction),
+            Ok(word) => Command::MakeLegalPlay(word),
             Err(msg) => Command::SyntaxError(msg),
         }
     }
@@ -68,8 +68,10 @@ fn game_loop(game: Game) {
             let input = read_line();
 
             match Command::parse(&input) {
-                Command::MakeLegalPlay(prediction) => {
-                    let new_game = game.add_prediction(prediction);
+                // Normal case
+                Command::MakeLegalPlay(word) => {
+                    // Evaluate new game state
+                    let new_game = game.add_prediction(word);
 
                     print_player_knowledge(&new_game);
                     game_loop(new_game);
