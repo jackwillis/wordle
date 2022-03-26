@@ -138,6 +138,7 @@ impl fmt::Display for Word {
     }
 }
 
+// implements `String::from(word)` and `let s: String = word.into()`
 impl From<Word> for String {
     fn from(word: Word) -> Self {
         word.0
