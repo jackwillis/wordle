@@ -34,10 +34,10 @@ impl fmt::Display for LetterScore {
 /// let x = LetterScore::PlacedCorrectly;
 /// let u = LetterScore::NotPresent;
 ///
-/// let mediocre_score = WordScore(vec![o, u, x, x, u]);
+/// let nice_try = WordScore(vec![o, u, x, x, u]);
 ///
-/// println!("{}", mediocre_score); //=> "O_XX_"
-/// assert!(!mediocre_score.is_winner());
+/// println!("{}", nice_try); //=> "O_XX_"
+/// assert!(!nice_try.is_winner());
 ///
 /// let winning_score = WordScore(vec![x, x, x, x, x]);
 ///
