@@ -3,7 +3,7 @@ use std::str::FromStr;
 
 use crate::Word;
 
-// Static dictionary. Every item is guaranteed to be a valid [LegalWord].
+/// Static dictionary. Every item is guaranteed to be valid as a [Word].
 const DICTIONARY: &[&str] = &[
     "CIGAR", "REBUT", "SISSY", "HUMPH", "AWAKE", "BLUSH", "FOCAL", "EVADE", "NAVAL", "SERVE",
     "HEATH", "DWARF", "MODEL", "KARMA", "STINK", "GRADE", "QUIET", "BENCH", "ABATE", "FEIGN",
