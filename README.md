@@ -15,13 +15,12 @@ If using Visual Studio Code, install the
 and uninstall the [official Rust one](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust) if you have it.
 Rust-analyzer is better and active and it's being phased in to replace the other.
 
-All build tasks are handled with Rust's command-line tool, cargo,
-which automagically handles dependencies and compilation.
-The command [`cargo test`](https://doc.rust-lang.org/cargo/commands/cargo-test.html) will run tests,
-[`cargo doc --open`](https://doc.rust-lang.org/cargo/commands/cargo-doc.html) will open documentation,
-and [`cargo run`](https://doc.rust-lang.org/cargo/commands/cargo-run.html) will run the binary.
+Rust's command-line tool, cargo, manages the build.
+The command `cargo test` will run tests,
+`cargo run` will run the binary,
+and `cargo doc --open` will open documentation,
 See: [The Cargo Book](https://doc.rust-lang.org/cargo/index.html),
-"[Build Commands](https://doc.rust-lang.org/cargo/commands/build-commands.html)." 
+"[Build Commands](https://doc.rust-lang.org/cargo/commands/build-commands.html)."
 
 See also [clippy](https://github.com/rust-lang/rust-clippy),
 a linter which is used in the
