@@ -20,12 +20,19 @@ mod tests {
     use std::str::FromStr;
 
     use super::DICTIONARY;
-    use crate::Word;
+    use crate::{random_word, Word};
 
     #[test]
     fn test_every_word_in_dictionary_is_valid() {
         for word in DICTIONARY {
             assert!(Word::from_str(word).is_ok());
+        }
+    }
+
+    #[test]
+    fn test_random_word_does_not_panic() {
+        for _ in 0..10_000 {
+            random_word();
         }
     }
 }
