@@ -23,20 +23,18 @@ impl LetterKnowledge {
         'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
     ];
 
+    /// The player should gain knowledge from the letters in their prediction.
+    /// Each letter could be revealed as a "good" or "bad" letter --
+    /// "good" meaning the letter is in the secret word.
     pub fn update(&self, secret_word: &Word, prediction: &Word) -> Self {
         let mut knowledge = self.clone();
 
-        // Receive information from the letters in our guess
         for letter in prediction.letters() {
-            // Each letter could be revealed as a "good" or "bad" letter
-            // Good means the guessed letter is in the set of letters of the secret word.
             if secret_word.letters().any(|x| x == letter) {
                 knowledge.good.insert(letter);
             } else {
                 knowledge.bad.insert(letter);
             }
-
-            // Any letter that's been played, whether good or bad, is no longer unknown.
             knowledge.unknown.remove(&letter);
         }
 
