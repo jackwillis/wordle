@@ -109,7 +109,7 @@ impl Game {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Game, GameStatus, random_word};
+    use crate::{random_word, Game, GameStatus};
 
     #[test]
     fn test_new_game_is_active() {
