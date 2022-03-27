@@ -16,12 +16,10 @@ and uninstall the [official Rust one](https://marketplace.visualstudio.com/items
 Rust-analyzer is better and active and it's being phased in to replace the other.
 
 Rust's command-line tool, cargo, manages the build.
-The command `cargo test` will run tests (and initialize commit hooks),
+The command `cargo test` will run tests,
 `cargo run` will run the binary,
 and `cargo doc --open` will open documentation,
 See: [The Cargo Book](https://doc.rust-lang.org/cargo/index.html),
 "[Build Commands](https://doc.rust-lang.org/cargo/commands/build-commands.html)."
 
-See also [clippy](https://github.com/rust-lang/rust-clippy),
-a linter which is used in the
-[continuous integration](https://github.com/jackwillis/wordle/actions/workflows/build.yml).
+Any build command will initialize git hooks, see [.rusty-hook.toml].
