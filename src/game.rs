@@ -45,6 +45,13 @@ impl Default for LetterKnowledge {
     }
 }
 
+#[derive(Clone, Copy, PartialEq)]
+pub enum GameStatus {
+    Active,
+    Lost,
+    Won,
+}
+
 #[derive(Clone)]
 pub struct Game {
     pub secret_word: Word,
