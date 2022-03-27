@@ -100,3 +100,18 @@ impl Game {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::str::FromStr;
+
+    use crate::{Game, Word, GameStatus};
+
+    #[test]
+    fn test_new_game_is_active() {
+        let word = Word::from_str("spark").unwrap();
+        let game = Game::new(word);
+
+        assert!(game.calculate_status() == GameStatus::Active);
+    }
+}
