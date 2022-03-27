@@ -2,13 +2,6 @@ use std::collections::BTreeSet;
 
 use crate::word::{Word, WordScore};
 
-#[derive(Clone, Copy, PartialEq)]
-pub enum GameStatus {
-    Active,
-    Lost,
-    Won,
-}
-
 /// Represents the player's knowledge of "good" and "bad" letters.
 #[derive(Clone)]
 pub struct LetterKnowledge {
@@ -109,14 +102,11 @@ impl Game {
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
-
-    use crate::{Game, GameStatus, Word};
+    use crate::{Game, GameStatus, random_word};
 
     #[test]
     fn test_new_game_is_active() {
-        let word = Word::from_str("spark").unwrap();
-        let game = Game::new(word);
+        let game = Game::new(random_word());
 
         assert!(game.calculate_status() == GameStatus::Active);
     }

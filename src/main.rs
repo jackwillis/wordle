@@ -100,14 +100,14 @@ fn read_line() -> String {
 
 /// Prints a command line prompt of the number of remaining guesses.
 fn print_prompt(game: &Game) {
-    print!("{} ", game.remaining_guesses());
+    print!("{}> ", game.remaining_guesses());
     io::stdout().flush().expect("Failed to flush stdout.");
 }
 
 /// Prints the score for the last play, and the player's knowledge of "good" and "bad" letters.
 fn print_player_knowledge(game: &Game) {
     let last_score = game.last_score().unwrap();
-    print!("  {} | ", last_score);
+    print!("   {} | ", last_score);
 
     let letter_knowledge = &game.letter_knowledge;
 
