@@ -100,11 +100,9 @@ impl Game {
                 } else {
                     GameStatus::Active
                 }
-            },
-            // no moves have been played yet
-            None => {
-                GameStatus::Active
             }
+            // no moves have been played yet
+            None => GameStatus::Active,
         }
     }
 }
@@ -113,7 +111,7 @@ impl Game {
 mod tests {
     use std::str::FromStr;
 
-    use crate::{Game, Word, GameStatus};
+    use crate::{Game, GameStatus, Word};
 
     #[test]
     fn test_new_game_is_active() {
