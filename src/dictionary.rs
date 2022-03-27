@@ -32,7 +32,7 @@ mod tests {
     #[test]
     fn test_random_word_does_not_panic() {
         for _ in 0..10_000 {
-            random_word();
+            drop(random_word());
         }
     }
 }
