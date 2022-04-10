@@ -1,0 +1,5 @@
+#!/bin/sh
+rustup component add rustfmt && \
+rustup component add clippy && \
+cargo clippy -- -D warnings && \
+cargo build && cargo test

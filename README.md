@@ -22,4 +22,4 @@ and `cargo doc --open` will open documentation,
 See: [The Cargo Book](https://doc.rust-lang.org/cargo/index.html),
 "[Build Commands](https://doc.rust-lang.org/cargo/commands/build-commands.html)."
 
-Any build command will initialize git hooks, see [.rusty-hook.toml].
+Run the `install-git-hooks` script before using version control.
