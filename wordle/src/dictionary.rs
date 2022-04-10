@@ -11,7 +11,7 @@ const DICTIONARY: &[&str] = &[
 
 /// Chooses a random [Word] from a static dictionary.
 pub fn random_word() -> Word {
-    let word = *DICTIONARY.choose(&mut rand::thread_rng()).unwrap();
+    let &word = DICTIONARY.choose(&mut rand::thread_rng()).unwrap();
     Word::from_str(word).unwrap()
 }
 
@@ -24,7 +24,7 @@ mod tests {
 
     #[test]
     fn test_every_word_in_dictionary_is_valid() {
-        for word in DICTIONARY {
+        for &word in DICTIONARY {
             assert!(Word::from_str(word).is_ok());
         }
     }
@@ -32,7 +32,8 @@ mod tests {
     #[test]
     fn test_random_word_does_not_panic() {
         for _ in 0..10_000 {
-            random_word();
+            let word = random_word();
+            drop(word);
         }
     }
 }

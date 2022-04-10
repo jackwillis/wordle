@@ -2,13 +2,6 @@ use std::collections::BTreeSet;
 
 use crate::word::{Word, WordScore};
 
-#[derive(Clone, Copy, PartialEq)]
-pub enum GameStatus {
-    Active,
-    Lost,
-    Won,
-}
-
 /// Represents the player's knowledge of "good" and "bad" letters.
 #[derive(Clone)]
 pub struct LetterKnowledge {
@@ -52,6 +45,13 @@ impl Default for LetterKnowledge {
     }
 }
 
+#[derive(Clone, Copy, PartialEq)]
+pub enum GameStatus {
+    Active,
+    Lost,
+    Won,
+}
+
 #[derive(Clone)]
 pub struct Game {
     pub secret_word: Word,
@@ -91,12 +91,30 @@ impl Game {
     }
 
     pub fn calculate_status(&self) -> GameStatus {
-        if self.last_score().is_some() && self.last_score().unwrap().is_winner() {
-            GameStatus::Won
-        } else if self.remaining_guesses() == 0 {
-            GameStatus::Lost
-        } else {
-            GameStatus::Active
+        match self.last_score() {
+            Some(score) => {
+                if score.is_winner() {
+                    GameStatus::Won
+                } else if self.remaining_guesses() == 0 {
+                    GameStatus::Lost
+                } else {
+                    GameStatus::Active
+                }
+            }
+            // no moves have been played yet
+            None => GameStatus::Active,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{random_word, Game, GameStatus};
+
+    #[test]
+    fn test_new_game_is_active() {
+        let game = Game::new(random_word());
+
+        assert!(game.calculate_status() == GameStatus::Active);
     }
 }

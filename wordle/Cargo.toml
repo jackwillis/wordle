@@ -6,3 +6,6 @@ license = "MIT"
 
 [dependencies]
 rand = "0.8"
+
+[dev-dependencies]
+rusty-hook = "^0.11.2"

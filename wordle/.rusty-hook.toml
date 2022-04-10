@@ -1,0 +1,6 @@
+[hooks]
+pre-commit = "cargo check"
+pre-push = "rustup component add rustfmt && rustup component add clippy && cargo clippy -- -D warnings && cargo build && cargo test"
+
+[logging]
+verbose = true
