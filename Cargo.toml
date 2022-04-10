@@ -1,8 +1,6 @@
-[package]
-name = "wordle"
-version = "0.1.0"
-edition = "2021"
-license = "MIT"
+[workspace]
 
-[dependencies]
-rand = "0.8"
+members = [
+    "wordle",
+    "wordle-gui"
+]
