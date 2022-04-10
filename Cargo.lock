@@ -2091,6 +2091,7 @@ name = "wordle-gui"
 version = "0.1.0"
 dependencies = [
  "eframe",
+ "wordle",
 ]
 
 [[package]]

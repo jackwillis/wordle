@@ -2,23 +2,34 @@
 
 use eframe::{egui, epi};
 
-#[derive(Default)]
-struct MyEguiApp {}
+struct WordleApp {
+    secret_word: wordle::Word,
+}
 
-impl epi::App for MyEguiApp {
+impl WordleApp {
+    fn new() -> Self {
+        Self {
+            secret_word: wordle::random_word(),
+        }
+    }
+}
+
+impl epi::App for WordleApp {
     fn name(&self) -> &str {
-        "My egui App"
+        "Wordle"
     }
 
     fn update(&mut self, ctx: &egui::Context, _frame: &epi::Frame) {
+        let text = format!("Today's word is: {}", self.secret_word);
+
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("Hello World!");
+            ui.heading(text);
         });
     }
 }
 
 fn main() {
-    let app = MyEguiApp::default();
+    let app = WordleApp::new();
     let native_options = eframe::NativeOptions::default();
     eframe::run_native(Box::new(app), native_options);
 }
