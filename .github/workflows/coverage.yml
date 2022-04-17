@@ -12,6 +12,8 @@ jobs:
         profile: minimal
         toolchain: stable
         override: true
+    - name: Install egui Linux dependencies
+        run: sudo apt-get install libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libspeechd-dev libxkbcommon-dev libssl-dev
     - name: Install tarpaulin
       run: cargo install cargo-tarpaulin
     - name: Run tarpaulin
