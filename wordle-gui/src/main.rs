@@ -3,18 +3,19 @@
 use eframe::{egui, epi};
 
 struct WordleApp {
-    secret_word: wordle::Word,
+    game: wordle::Game,
 
-    input: String,
-    predictions: Vec<String>,
+    text_input_buffer: String,
+    flash_buffer: String,
 }
 
 impl WordleApp {
     fn new() -> Self {
         Self {
-            secret_word: wordle::random_word(),
-            input: String::new(),
-            predictions: Vec::new(),
+            game: wordle::Game::new(wordle::random_word()),
+
+            text_input_buffer: String::new(),
+            flash_buffer: String::new(),
         }
     }
 }
@@ -26,27 +27,32 @@ impl epi::App for WordleApp {
 
     fn update(&mut self, ctx: &egui::Context, _frame: &epi::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading(format!("Today's word is: {}", self.secret_word));
+            ui.heading(format!("Today's word is: {}", self.game.secret_word));
 
-            let text_edit = ui.text_edit_singleline(&mut self.input);
+            let text_edit = ui.text_edit_singleline(&mut self.text_input_buffer);
 
             if text_edit.lost_focus() {
-                self.predictions.push(self.input.clone());
+                match self.text_input_buffer.parse::<wordle::Word>() {
+                    Ok(word) => {
+                        self.flash_buffer = format!("Ok: {}", word);
+                        self.game = self.game.with_prediction(word);
+                    }
+                    Err(msg) => {
+                        self.flash_buffer = format!("Err: {}", msg);
+                    }
+                }
+
+                self.text_input_buffer.clear();
             }
 
             if !text_edit.has_focus() {
                 text_edit.request_focus();
             }
 
-            for prediction in &self.predictions {
-                match prediction.parse::<wordle::Word>() {
-                    Ok(word) => {
-                        ui.label(format!("Ok: {}", word));
-                    }
-                    Err(msg) => {
-                        ui.label(format!("Err: {}", msg));
-                    }
-                }
+            ui.label(&self.flash_buffer);
+
+            for prediction in &self.game.predictions {
+                ui.label(format!("{}", prediction));
             }
         });
     }

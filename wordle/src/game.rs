@@ -55,6 +55,7 @@ pub enum GameStatus {
 #[derive(Clone)]
 pub struct Game {
     pub secret_word: Word,
+    pub predictions: Vec<Word>,
     pub scores: Vec<WordScore>,
     pub letter_knowledge: LetterKnowledge,
 }
@@ -65,19 +66,21 @@ impl Game {
     pub fn new(secret_word: Word) -> Game {
         Game {
             secret_word,
+            predictions: Vec::new(),
             scores: Vec::new(),
             letter_knowledge: LetterKnowledge::default(),
         }
     }
 
-    pub fn add_prediction(&self, prediction: Word) -> Self {
+    pub fn with_prediction(&self, prediction: Word) -> Self {
         let mut updated_game = self.clone();
-
-        let score = self.secret_word.guess(&prediction);
-        updated_game.scores.push(score);
 
         let updated_knowledge = self.letter_knowledge.update(&self.secret_word, &prediction);
         updated_game.letter_knowledge = updated_knowledge;
+
+        let score = self.secret_word.guess(&prediction);
+        updated_game.scores.push(score);
+        updated_game.predictions.push(prediction);
 
         updated_game
     }

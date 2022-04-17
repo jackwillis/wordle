@@ -70,7 +70,7 @@ fn game_loop(game: Game) {
                 // Normal case
                 Command::ValidWord(word) => {
                     // Calculate new game state
-                    let new_game = game.add_prediction(word);
+                    let new_game = game.with_prediction(word);
 
                     print_player_knowledge(&new_game);
                     game_loop(new_game);
