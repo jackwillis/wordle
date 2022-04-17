@@ -51,8 +51,9 @@ impl epi::App for WordleApp {
 
             ui.label(&self.flash_buffer);
 
-            for prediction in &self.game.predictions {
-                ui.label(format!("{}", prediction));
+            for play in &self.game.plays {
+                ui.label(play.prediction.to_string());
+                ui.label(play.score.to_string());
             }
         });
     }
