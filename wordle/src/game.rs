@@ -53,21 +53,25 @@ pub enum GameStatus {
 }
 
 #[derive(Clone)]
+pub struct Play {
+    pub prediction: Word,
+    pub score: WordScore,
+}
+
+#[derive(Clone)]
 pub struct Game {
     pub secret_word: Word,
-    pub predictions: Vec<Word>,
-    pub scores: Vec<WordScore>,
+    pub plays: Vec<Play>,
     pub letter_knowledge: LetterKnowledge,
 }
 
 impl Game {
-    const MAXIMUM_GUESSES: i32 = 6;
+    const MAXIMUM_PLAYS: i32 = 6;
 
     pub fn new(secret_word: Word) -> Game {
         Game {
             secret_word,
-            predictions: Vec::new(),
-            scores: Vec::new(),
+            plays: Vec::new(),
             letter_knowledge: LetterKnowledge::default(),
         }
     }
@@ -79,18 +83,17 @@ impl Game {
         updated_game.letter_knowledge = updated_knowledge;
 
         let score = self.secret_word.guess(&prediction);
-        updated_game.scores.push(score);
-        updated_game.predictions.push(prediction);
+        updated_game.plays.push(Play { score, prediction });
 
         updated_game
     }
 
     pub fn remaining_guesses(&self) -> usize {
-        Game::MAXIMUM_GUESSES as usize - self.scores.len()
+        Game::MAXIMUM_PLAYS as usize - self.plays.len()
     }
 
     pub fn last_score(&self) -> Option<&WordScore> {
-        self.scores.last()
+        self.plays.last().map(|p| &p.score)
     }
 
     pub fn calculate_status(&self) -> GameStatus {
