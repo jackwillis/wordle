@@ -1,12 +1,15 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 
-use eframe::{egui, epi};
+use eframe::{
+    egui::{self, RichText},
+    epi,
+};
 
 struct WordleApp {
     game: wordle::Game,
 
     text_input_buffer: String,
-    flash_buffer: String,
+    text_edit_flash: String,
 }
 
 impl WordleApp {
@@ -15,7 +18,7 @@ impl WordleApp {
             game: wordle::Game::new(wordle::random_word()),
 
             text_input_buffer: String::new(),
-            flash_buffer: String::new(),
+            text_edit_flash: String::new(),
         }
     }
 }
@@ -29,19 +32,20 @@ impl epi::App for WordleApp {
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.heading(format!("Today's word is: {}", self.game.secret_word));
 
+            ui.label(&self.text_edit_flash);
+
             let text_edit = ui.text_edit_singleline(&mut self.text_input_buffer);
 
             if text_edit.lost_focus() {
                 match self.text_input_buffer.parse::<wordle::Word>() {
                     Ok(word) => {
-                        self.flash_buffer = format!("Ok: {}", word);
                         self.game = self.game.with_prediction(word);
+                        self.text_edit_flash.clear();
                     }
                     Err(msg) => {
-                        self.flash_buffer = format!("Err: {}", msg);
+                        self.text_edit_flash = format!("Invalid word: {}", msg);
                     }
                 }
-
                 self.text_input_buffer.clear();
             }
 
@@ -49,11 +53,13 @@ impl epi::App for WordleApp {
                 text_edit.request_focus();
             }
 
-            ui.label(&self.flash_buffer);
-
             for play in &self.game.plays {
-                ui.label(play.prediction.to_string());
-                ui.label(play.score.to_string());
+                ui.label(
+                    RichText::new(play.prediction.to_string())
+                        .monospace()
+                        .size(24.0),
+                );
+                ui.label(RichText::new(play.score.to_string()).monospace().size(24.0));
             }
         });
     }
