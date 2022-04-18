@@ -8,7 +8,7 @@ use eframe::{
 struct WordleApp {
     game: wordle::Game,
 
-    text_input_buffer: String,
+    text_edit_buffer: String,
     text_edit_flash: String,
 }
 
@@ -17,8 +17,49 @@ impl WordleApp {
         Self {
             game: wordle::Game::new(wordle::random_word()),
 
-            text_input_buffer: String::new(),
+            text_edit_buffer: String::new(),
             text_edit_flash: String::new(),
+        }
+    }
+
+    fn text_edit(&mut self, ui: &mut egui::Ui) {
+        let text_edit = ui.text_edit_singleline(&mut self.text_edit_buffer);
+
+        // Has the user hit enter or clicked away?
+        if text_edit.lost_focus() {
+            self.text_edit_flash.clear();
+
+            let input = self.text_edit_buffer.trim();
+
+            if !input.is_empty() {
+                match input.parse::<wordle::Word>() {
+                    Ok(prediction) => {
+                        // Update game state
+                        self.game = self.game.with_prediction(prediction);
+                    }
+                    Err(msg) => {
+                        self.text_edit_flash = format!("Invalid word: {}", msg);
+                    }
+                }
+            }
+
+            self.text_edit_buffer.clear();
+        }
+
+        // This element should always be focused
+        if !text_edit.has_focus() {
+            text_edit.request_focus();
+        }
+    }
+
+    fn plays(&mut self, ui: &mut egui::Ui) {
+        for play in &self.game.plays {
+            ui.label(
+                RichText::new(play.prediction.to_string())
+                    .monospace()
+                    .size(24.0),
+            );
+            ui.label(RichText::new(play.score.to_string()).monospace().size(24.0));
         }
     }
 }
@@ -34,33 +75,9 @@ impl epi::App for WordleApp {
 
             ui.label(&self.text_edit_flash);
 
-            let text_edit = ui.text_edit_singleline(&mut self.text_input_buffer);
+            self.text_edit(ui);
 
-            if text_edit.lost_focus() {
-                match self.text_input_buffer.parse::<wordle::Word>() {
-                    Ok(word) => {
-                        self.game = self.game.with_prediction(word);
-                        self.text_edit_flash.clear();
-                    }
-                    Err(msg) => {
-                        self.text_edit_flash = format!("Invalid word: {}", msg);
-                    }
-                }
-                self.text_input_buffer.clear();
-            }
-
-            if !text_edit.has_focus() {
-                text_edit.request_focus();
-            }
-
-            for play in &self.game.plays {
-                ui.label(
-                    RichText::new(play.prediction.to_string())
-                        .monospace()
-                        .size(24.0),
-                );
-                ui.label(RichText::new(play.score.to_string()).monospace().size(24.0));
-            }
+            self.plays(ui);
         });
     }
 
