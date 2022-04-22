@@ -28,20 +28,19 @@ impl fmt::Display for LetterScore {
 /// Wraps a [Vec] of five [LetterScore]s.
 ///
 /// ```rust
-/// use wordle::word::{LetterScore, WordScore};
-///
+/// # use wordle::word::{LetterScore, WordScore};
 /// let o = LetterScore::PresentElsewhere;
 /// let x = LetterScore::PlacedCorrectly;
 /// let u = LetterScore::NotPresent;
 ///
 /// let nice_try = WordScore(vec![o, u, x, x, u]);
 ///
-/// println!("{}", nice_try); //=> "O_XX_"
+/// assert_eq!(format!("{}", nice_try), "O_XX_");
 /// assert!(!nice_try.is_winner());
 ///
 /// let winning_score = WordScore(vec![x, x, x, x, x]);
 ///
-/// println!("{}", winning_score); //=> "XXXXX"
+/// assert_eq!(format!("{}", winning_score), "XXXXX");
 /// assert!(winning_score.is_winner());
 /// ```
 #[derive(Clone, Debug, PartialEq)]
@@ -50,15 +49,15 @@ pub struct WordScore(pub Vec<LetterScore>);
 impl WordScore {
     /// Returns true if all letters have been guessed correctly.
     pub fn is_winner(&self) -> bool {
-        self.0.iter().all(|x| x == &LetterScore::PlacedCorrectly)
+        self.0.iter().all(|&x| x == LetterScore::PlacedCorrectly)
     }
 }
 
 impl fmt::Display for WordScore {
     /// Concatenates all the [LetterScore]s.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        for x in self.0.iter() {
-            write!(f, "{}", x)?
+        for &x in &self.0 {
+            write!(f, "{}", x)?;
         }
         Ok(())
     }
@@ -72,36 +71,19 @@ impl fmt::Display for WordScore {
 /// * The letters are stored as uppercase.
 ///
 /// ```rust
-/// use wordle::Word;
-/// use std::str::FromStr;
+/// use wordle::{Word, WordParseError};
 ///
-/// let adieu: Word = Word::from_str("Adieu").unwrap();
+/// let adieu: Word = "Adieu".parse::<Word>().unwrap();
 ///
 /// // Words are normalized to uppercase
-/// assert_eq!(String::from(adieu), "ADIEU");
+/// assert_eq!(adieu.to_string(), "ADIEU");
 ///
 /// // Invalid words are not allowed
-/// let invalid_word: Result<Word, &str> = Word::from_str("onomatopeia");
+/// let invalid_word: Result<Word, WordParseError> = "onomatopeia".parse::<Word>();
 /// assert!(invalid_word.is_err());
 /// ```
 #[derive(Clone, Debug, PartialEq)]
 pub struct Word(String);
-
-impl FromStr for Word {
-    type Err = &'static str;
-
-    /// Validates and creates a [Word] at runtime.
-    /// Normalizes to uppercase, so words have only one representation.
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        if s.len() != 5 {
-            Err("Word must be five letters long.")
-        } else if s.chars().any(|c| !c.is_ascii_alphabetic()) {
-            Err("Word must contain only letters from the English alphabet.")
-        } else {
-            Ok(Word(s.to_uppercase()))
-        }
-    }
-}
 
 impl Word {
     /// Returns an iterator over the letters of the word.
@@ -132,6 +114,42 @@ impl Word {
     }
 }
 
+#[derive(Clone, Debug)]
+pub enum WordParseError {
+    InvalidLength,
+    InvalidCharacters,
+}
+
+impl fmt::Display for WordParseError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::InvalidLength => write!(f, "Word must be five letters long."),
+            Self::InvalidCharacters => write!(
+                f,
+                "Word must contain only letters from the English alphabet."
+            ),
+        }
+    }
+}
+
+/// implements [str::parse::<Word>]
+impl FromStr for Word {
+    type Err = WordParseError;
+
+    /// Validates and creates a [Word] at runtime.
+    /// Normalizes to uppercase, so words have only one representation.
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if s.len() != 5 {
+            Err(WordParseError::InvalidLength)
+        } else if s.chars().any(|c| !c.is_ascii_alphabetic()) {
+            Err(WordParseError::InvalidCharacters)
+        } else {
+            Ok(Word(s.to_uppercase()))
+        }
+    }
+}
+
+// implements `println!("{}", word)` and `let s: String = word.to_string()`
 impl fmt::Display for Word {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.0)
@@ -148,8 +166,6 @@ impl From<Word> for String {
 #[cfg(test)]
 mod tests {
     use super::LetterScore;
-
-    use std::str::FromStr;
 
     const X: LetterScore = LetterScore::PlacedCorrectly;
     const O: LetterScore = LetterScore::PresentElsewhere;
@@ -189,56 +205,65 @@ mod tests {
 
     #[test]
     fn creates_valid_word() {
-        assert_eq!(String::from(Word::from_str("DRAKE").unwrap()), "DRAKE");
+        let str = "DRAKE";
+        let word = str.parse::<Word>().unwrap();
+
+        assert_eq!(String::from(word), str);
     }
 
     #[test]
     fn capitalizes_valid_word() {
-        assert_eq!(String::from(Word::from_str("Gumbo").unwrap()), "GUMBO");
+        let str = "Gumbo";
+        let word = str.parse::<Word>().unwrap();
+
+        assert_eq!(String::from(word), str.to_uppercase());
     }
 
     #[test]
     fn rejects_short_word_from_string() {
-        assert!(Word::from_str("HEN").is_err());
+        assert!("HEN".parse::<Word>().is_err());
     }
 
     #[test]
     fn rejects_long_word_from_string() {
-        assert!(Word::from_str("PRAIRIE").is_err());
+        assert!("PRAIRIE".parse::<Word>().is_err());
     }
 
     #[test]
     fn rejects_non_basic_latin_word_from_string() {
-        assert!(Word::from_str("OBÉIR").is_err());
+        assert!("OBÉIR".parse::<Word>().is_err());
     }
 
     #[test]
     fn rejects_blank_word() {
-        assert!(Word::from_str("").is_err());
+        assert!("".parse::<Word>().is_err());
     }
 
     #[test]
     fn formats_word() {
-        assert_eq!(format!("{}", Word::from_str("BRACK").unwrap()), "BRACK");
+        let str = "BRACK";
+        let word = str.parse::<Word>().unwrap();
+        assert_eq!(format!("{}", word), str);
     }
 
     #[test]
     fn accepts_correct_guess() {
-        let word = Word::from_str("JANUS").unwrap();
+        let str = "JANUS";
+        let word = str.parse::<Word>().unwrap();
         assert_eq!(word.guess(&word), WordScore(vec![X, X, X, X, X]));
     }
 
     #[test]
     fn rejects_incorrect_guess() {
-        let word = Word::from_str("SPICE").unwrap();
-        let wrong_guess = Word::from_str("SPACE").unwrap();
+        let word = "SPICE".parse::<Word>().unwrap();
+        let wrong_guess = "SPACE".parse::<Word>().unwrap();
         assert_eq!(word.guess(&wrong_guess), WordScore(vec![X, X, U, X, X]));
     }
 
     #[test]
     fn evaluates_and_formats_guess() {
-        let word = Word::from_str("CRANE").unwrap();
-        let wrong_guess = Word::from_str("BROWN").unwrap();
+        let word = "CRANE".parse::<Word>().unwrap();
+        let wrong_guess = "BROWN".parse::<Word>().unwrap();
         let guess = word.guess(&wrong_guess);
         assert_eq!(format!("{}", guess), "_X__O");
     }

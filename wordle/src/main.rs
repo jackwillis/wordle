@@ -1,7 +1,7 @@
 use std::io;
 use std::io::Write;
 
-use wordle::{Game, GameStatus, Word};
+use wordle::{Game, GameStatus, LetterKnowledge, Word, WordParseError, WordScore};
 
 fn main() {
     println!("WORDLE!");
@@ -21,8 +21,7 @@ An 'X' under a letter means you guessed the right letter in the right spot.
 An 'O' means the letter you guessed there is in the word, but somewhere else.
 An '_' means the letter you guessed there isn't in the word.";
 
-type WordParseError = &'static str;
-
+#[derive(Clone, Debug)]
 enum Turn {
     PlayValidWord(Word),
     PlayInvalidWord(WordParseError),
@@ -50,24 +49,8 @@ impl Turn {
     }
 }
 
-/// Read, evaluate, print, loop (recurse).
-/// Max depth is [Game::MAXIMUM_PLAYS] == 6.
-fn game_loop(game: Game) {
-    match game.calculate_status() {
-        GameStatus::Won => println!("You're a winner, baby!"),
-        GameStatus::Lost => println!("You lost :(\nThe word was: {}", game.secret_word),
-        GameStatus::Active => {
-            print_prompt(&game);
-            let command: String = read_line();
-            let turn: Turn = Turn::parse(&command);
-            let new_game: Game = advance_game(turn, game);
-            game_loop(new_game);
-        }
-    }
-}
-
-fn advance_game(game_move: Turn, game: Game) -> Game {
-    match game_move {
+fn advance_game(turn: Turn, game: Game) -> Game {
+    match turn {
         // Typical case
         Turn::PlayValidWord(word) => {
             let new_game: Game = game.with_prediction(word);
@@ -94,6 +77,22 @@ fn advance_game(game_move: Turn, game: Game) -> Game {
     }
 }
 
+/// Read, evaluate, print, loop (recurse).
+/// Max depth is Game::MAXIMUM_PLAYS == 6.
+fn game_loop(game: Game) {
+    match game.calculate_status() {
+        GameStatus::Won => println!("You're a winner, baby!"),
+        GameStatus::Lost => println!("You lost :(\nThe word was: {}", game.secret_word),
+        GameStatus::Active => {
+            print_prompt(&game);
+            let input: String = read_line();
+            let turn: Turn = Turn::parse(&input);
+            let new_game: Game = advance_game(turn, game);
+            game_loop(new_game);
+        }
+    }
+}
+
 // Views
 
 /// Reads a line from the console into an owned [String].
@@ -113,10 +112,10 @@ fn print_prompt(game: &Game) {
 
 /// Prints the score for the last play, and the player's knowledge of "good" and "bad" letters.
 fn print_player_knowledge(game: &Game) {
-    let last_score = game.last_score().unwrap();
+    let last_score: &WordScore = game.last_score().unwrap();
     print!("    {} // ", last_score); // offset to line up with prompt
 
-    let letter_knowledge = &game.letter_knowledge;
+    let letter_knowledge: &LetterKnowledge = &game.letter_knowledge;
 
     print!("good: ");
     for c in &letter_knowledge.good {
