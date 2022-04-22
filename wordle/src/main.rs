@@ -7,8 +7,8 @@ fn main() {
     println!("WORDLE!");
     println!("Type \"help\" for game rules.");
 
-    let secret_word = wordle::random_word();
-    let game = Game::new(secret_word);
+    let secret_word: Word = wordle::random_word();
+    let game: Game = Game::new(secret_word);
 
     game_loop(game);
 }
@@ -23,8 +23,7 @@ An '_' means the letter you guessed there isn't in the word.";
 
 type WordParseError = &'static str;
 
-/// Represents user input from command line.
-enum GameMove {
+enum Turn {
     PlayValidWord(Word),
     PlayInvalidWord(WordParseError),
     DisplayHelpMessage,
@@ -32,22 +31,21 @@ enum GameMove {
     NoOp,
 }
 
-impl GameMove {
-    /// Parses user input from command line.
-    fn parse(input: &str) -> GameMove {
+impl Turn {
+    fn parse(input: &str) -> Turn {
         let input = input.trim();
 
         if input.is_empty() {
-            return GameMove::NoOp;
+            return Turn::NoOp;
         } else if input.to_lowercase() == "help" {
-            return GameMove::DisplayHelpMessage;
+            return Turn::DisplayHelpMessage;
         } else if input == "?" {
-            return GameMove::DisplaySecretWord;
+            return Turn::DisplaySecretWord;
         }
 
         match input.parse::<Word>() {
-            Ok(word) => GameMove::PlayValidWord(word),
-            Err(err) => GameMove::PlayInvalidWord(err),
+            Ok(word) => Turn::PlayValidWord(word),
+            Err(err) => Turn::PlayInvalidWord(err),
         }
     }
 }
@@ -60,19 +58,19 @@ fn game_loop(game: Game) {
         GameStatus::Lost => println!("You lost :(\nThe word was: {}", game.secret_word),
         GameStatus::Active => {
             print_prompt(&game);
-            let command = read_line();
-            let game_move = GameMove::parse(&command);
-            let new_game = advance_game(game_move, game);
+            let command: String = read_line();
+            let turn: Turn = Turn::parse(&command);
+            let new_game: Game = advance_game(turn, game);
             game_loop(new_game);
         }
     }
 }
 
-fn advance_game(game_move: GameMove, game: Game) -> Game {
+fn advance_game(game_move: Turn, game: Game) -> Game {
     match game_move {
         // Typical case
-        GameMove::PlayValidWord(word) => {
-            let new_game = game.with_prediction(word);
+        Turn::PlayValidWord(word) => {
+            let new_game: Game = game.with_prediction(word);
 
             print_player_knowledge(&new_game);
 
@@ -80,19 +78,19 @@ fn advance_game(game_move: GameMove, game: Game) -> Game {
         }
 
         // Cases with no state change
-        GameMove::PlayInvalidWord(msg) => {
+        Turn::PlayInvalidWord(msg) => {
             println!("Invalid word: {}", msg);
             game
         }
-        GameMove::DisplayHelpMessage => {
+        Turn::DisplayHelpMessage => {
             println!("{}", HELP_MESSAGE);
             game
         }
-        GameMove::DisplaySecretWord => {
+        Turn::DisplaySecretWord => {
             println!("    {}", game.secret_word); // offset to line up with prompt
             game
         }
-        GameMove::NoOp => game,
+        Turn::NoOp => game,
     }
 }
 
