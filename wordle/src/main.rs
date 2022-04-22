@@ -5,7 +5,7 @@ use wordle::{Game, GameStatus, Word};
 
 fn main() {
     println!("WORDLE!");
-    println!("Type \"help\" for more information.");
+    println!("Type \"help\" for game rules.");
 
     let secret_word = wordle::random_word();
     let game = Game::new(secret_word);
@@ -28,6 +28,7 @@ enum GameMove {
     PlayValidWord(Word),
     PlayInvalidWord(WordParseError),
     DisplayHelpMessage,
+    DisplaySecretWord,
     NoOp,
 }
 
@@ -40,6 +41,8 @@ impl GameMove {
             return GameMove::NoOp;
         } else if input.to_lowercase() == "help" {
             return GameMove::DisplayHelpMessage;
+        } else if input == "?" {
+            return GameMove::DisplaySecretWord;
         }
 
         match input.parse::<Word>() {
@@ -69,15 +72,14 @@ fn advance_game(game_move: GameMove, game: Game) -> Game {
     match game_move {
         // Typical case
         GameMove::PlayValidWord(word) => {
-            // Calculate new game state
             let new_game = game.with_prediction(word);
 
             print_player_knowledge(&new_game);
+
             new_game
         }
 
         // Cases with no state change
-        //
         GameMove::PlayInvalidWord(msg) => {
             println!("Invalid word: {}", msg);
             game
@@ -86,9 +88,15 @@ fn advance_game(game_move: GameMove, game: Game) -> Game {
             println!("{}", HELP_MESSAGE);
             game
         }
+        GameMove::DisplaySecretWord => {
+            println!("    {}", game.secret_word); // offset to line up with prompt
+            game
+        }
         GameMove::NoOp => game,
     }
 }
+
+// Views
 
 /// Reads a line from the console into an owned [String].
 fn read_line() -> String {
@@ -108,7 +116,7 @@ fn print_prompt(game: &Game) {
 /// Prints the score for the last play, and the player's knowledge of "good" and "bad" letters.
 fn print_player_knowledge(game: &Game) {
     let last_score = game.last_score().unwrap();
-    print!("   {} | ", last_score);
+    print!("    {} // ", last_score); // offset to line up with prompt
 
     let letter_knowledge = &game.letter_knowledge;
 
@@ -117,12 +125,12 @@ fn print_player_knowledge(game: &Game) {
         print!("{}", c);
     }
 
-    print!(" | bad: ");
+    print!(" / bad: ");
     for c in &letter_knowledge.bad {
         print!("{}", c);
     }
 
-    print!(" | unknown: ");
+    print!(" / unknown: ");
     for c in &letter_knowledge.unknown {
         print!("{}", c);
     }
