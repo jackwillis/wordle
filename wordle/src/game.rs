@@ -66,7 +66,7 @@ pub struct Game {
 }
 
 impl Game {
-    const MAXIMUM_PLAYS: i32 = 6;
+    pub const MAXIMUM_GUESSES: i32 = 6;
 
     pub fn new(secret_word: Word) -> Game {
         Game {
@@ -77,19 +77,18 @@ impl Game {
     }
 
     pub fn with_prediction(&self, prediction: Word) -> Self {
-        let mut updated_game = self.clone();
+        let mut game = self.clone();
 
-        let updated_knowledge = self.letter_knowledge.update(&self.secret_word, &prediction);
-        updated_game.letter_knowledge = updated_knowledge;
+        game.letter_knowledge = game.letter_knowledge.update(&game.secret_word, &prediction);
 
-        let score = self.secret_word.guess(&prediction);
-        updated_game.plays.push(Play { score, prediction });
+        let score = game.secret_word.guess(&prediction);
+        game.plays.push(Play { prediction, score });
 
-        updated_game
+        game
     }
 
     pub fn remaining_guesses(&self) -> usize {
-        Game::MAXIMUM_PLAYS as usize - self.plays.len()
+        Game::MAXIMUM_GUESSES as usize - self.plays.len()
     }
 
     pub fn last_score(&self) -> Option<&WordScore> {

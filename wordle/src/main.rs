@@ -1,6 +1,5 @@
 use std::io;
 use std::io::Write;
-use std::str::FromStr;
 
 use wordle::{Game, GameStatus, Word};
 
@@ -14,78 +13,80 @@ fn main() {
     game_loop(game);
 }
 
-static HELP_MESSAGE: &str = r"The goal of the game is to guess the secret word.
-The secret word is a random five-letter-long English word.
-You may make up to six guesses. The number of guesses is displayed to the left of the prompt.
-You may guess any five-character sequence.
-After you guess, the outcome of your guess will be shown below.
-    * X represents a correct letter guess in the correct spot.
-    * O means the letter is part of the word but not at that position.
-    * _ means the letter is not in the word.
-    * Known good, bad, and unknown letters are also shown.";
+static HELP_MESSAGE: &str = r"Guess the secret word -- a random five-letter-long English word.
+
+Make up to (6) guesses.
+
+An 'X' under a letter means you guessed the right letter in the right spot.
+An 'O' means the letter you guessed there is in the word, but somewhere else.
+An '_' means the letter you guessed there isn't in the word.";
+
+type WordParseError = &'static str;
 
 /// Represents user input from command line.
-enum Command {
-    ValidWord(Word),
-    ParseWordError(&'static str),
-    HelpMessage,
+enum GameMove {
+    PlayValidWord(Word),
+    PlayInvalidWord(WordParseError),
+    DisplayHelpMessage,
     NoOp,
 }
 
-impl Command {
+impl GameMove {
     /// Parses user input from command line.
-    fn parse(input: &str) -> Command {
+    fn parse(input: &str) -> GameMove {
         let input = input.trim();
 
         if input.is_empty() {
-            return Command::NoOp;
+            return GameMove::NoOp;
         } else if input.to_lowercase() == "help" {
-            return Command::HelpMessage;
+            return GameMove::DisplayHelpMessage;
         }
 
-        match Word::from_str(input) {
-            Ok(word) => Command::ValidWord(word),
-            Err(msg) => Command::ParseWordError(msg),
+        match input.parse::<Word>() {
+            Ok(word) => GameMove::PlayValidWord(word),
+            Err(err) => GameMove::PlayInvalidWord(err),
         }
     }
 }
 
-/// Read--evaluate--print--loop
+/// Read, evaluate, print, loop (recurse).
+/// Max depth is [Game::MAXIMUM_PLAYS] == 6.
 fn game_loop(game: Game) {
     match game.calculate_status() {
-        // Base cases for recursion.
         GameStatus::Won => println!("You're a winner, baby!"),
         GameStatus::Lost => println!("You lost :(\nThe word was: {}", game.secret_word),
-
-        // Entry point and normal case.
-        // Ends with tail recursion.
         GameStatus::Active => {
             print_prompt(&game);
-
-            // Read from command line
-            let input = read_line();
-
-            // Evaluate, print, loop
-            match Command::parse(&input) {
-                // Normal case
-                Command::ValidWord(word) => {
-                    // Calculate new game state
-                    let new_game = game.with_prediction(word);
-
-                    print_player_knowledge(&new_game);
-                    game_loop(new_game);
-                }
-                Command::ParseWordError(msg) => {
-                    println!("Invalid word: {}", msg);
-                    game_loop(game);
-                }
-                Command::HelpMessage => {
-                    println!("{}", HELP_MESSAGE);
-                    game_loop(game);
-                }
-                Command::NoOp => game_loop(game),
-            }
+            let command = read_line();
+            let game_move = GameMove::parse(&command);
+            let new_game = advance_game(game_move, game);
+            game_loop(new_game);
         }
+    }
+}
+
+fn advance_game(game_move: GameMove, game: Game) -> Game {
+    match game_move {
+        // Typical case
+        GameMove::PlayValidWord(word) => {
+            // Calculate new game state
+            let new_game = game.with_prediction(word);
+
+            print_player_knowledge(&new_game);
+            new_game
+        }
+
+        // Cases with no state change
+        //
+        GameMove::PlayInvalidWord(msg) => {
+            println!("Invalid word: {}", msg);
+            game
+        }
+        GameMove::DisplayHelpMessage => {
+            println!("{}", HELP_MESSAGE);
+            game
+        }
+        GameMove::NoOp => game,
     }
 }
 
@@ -100,7 +101,7 @@ fn read_line() -> String {
 
 /// Prints a command line prompt of the number of remaining guesses.
 fn print_prompt(game: &Game) {
-    print!("{}> ", game.remaining_guesses());
+    print!("({}) ", game.remaining_guesses());
     io::stdout().flush().expect("Failed to flush stdout.");
 }
 
