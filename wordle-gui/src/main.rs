@@ -49,10 +49,8 @@ impl Sandbox for App {
     fn update(&mut self, message: Message) {
         match message {
             Message::TextInputChanged(value) => {
-                // println!("a: {:?}", self);
                 self.text_input_is_valid_word = value.parse::<wordle::Word>().is_ok();
                 self.text_input_value = value;
-                // println!("b: {:?}", self);
             }
             Message::TextInputSubmitted => match self.text_input_value.parse::<wordle::Word>() {
                 Ok(word) => {
