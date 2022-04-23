@@ -2,5 +2,6 @@
 
 members = [
     "wordle",
+    "wordle-web",
     #"wordle-gui"
 ]
