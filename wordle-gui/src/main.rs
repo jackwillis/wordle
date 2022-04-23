@@ -1,3 +1,7 @@
+// Hide console window in release builds on Windows, this blocks stdout.
+// See <https://github.com/emilk/eframe_template/commit/86fe7b7b87e3a3868ce2648a3f2a63b6a044133f>.
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
 use iced::{text_input, window, Align, Column, Element, Sandbox, Settings, Text, TextInput};
 
 pub fn main() -> iced::Result {
@@ -13,12 +17,13 @@ pub fn main() -> iced::Result {
     App::run(settings)
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 struct App {
     text_input_value: String,
     text_input_is_valid_word: bool,
     text_input: text_input::State,
-    words: Vec<String>,
+    flash: Option<String>,
+    words: Vec<wordle::Word>,
 }
 
 #[derive(Debug, Clone)]
@@ -44,13 +49,21 @@ impl Sandbox for App {
     fn update(&mut self, message: Message) {
         match message {
             Message::TextInputChanged(value) => {
+                // println!("a: {:?}", self);
                 self.text_input_is_valid_word = value.parse::<wordle::Word>().is_ok();
                 self.text_input_value = value;
+                // println!("b: {:?}", self);
             }
-            Message::TextInputSubmitted => {
-                self.words.push(self.text_input_value.to_owned());
-                self.text_input_value.clear();
-            }
+            Message::TextInputSubmitted => match self.text_input_value.parse::<wordle::Word>() {
+                Ok(word) => {
+                    self.words.push(word);
+                    self.text_input_value.clear();
+                    self.flash = None;
+                }
+                Err(err) => {
+                    self.flash = Some(err.to_string());
+                }
+            },
         }
     }
 
@@ -71,8 +84,12 @@ impl Sandbox for App {
 
         column = column.push(text_input);
 
+        let flash_msg = self.flash.to_owned().unwrap_or_default();
+        let flash = Text::new(flash_msg).size(20);
+        column = column.push(flash);
+
         for word in &self.words {
-            let word_label = Text::new(word).size(20);
+            let word_label = Text::new(word.to_owned()).size(20);
             column = column.push(word_label);
         }
 

@@ -139,7 +139,7 @@ impl FromStr for Word {
     /// Validates and creates a [Word] at runtime.
     /// Normalizes to uppercase, so words have only one representation.
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        if s.len() != 5 {
+        if s.chars().count() != 5 {
             Err(WordParseError::InvalidLength)
         } else if s.chars().any(|c| !c.is_ascii_alphabetic()) {
             Err(WordParseError::InvalidCharacters)
