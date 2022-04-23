@@ -33,8 +33,8 @@ impl fmt::Display for LetterScore {
 ///
 /// let not_a_winner = WordScore(vec![o, u, x, x, u]);
 ///
-/// assert_eq!(format!("{}", nice_try), "O_XX_");
-/// assert!(!nice_try.is_winner());
+/// assert_eq!(format!("{}", not_a_winner), "O_XX_");
+/// assert!(!not_a_winner.is_winner());
 ///
 /// let winning_score = WordScore(vec![x, x, x, x, x]);
 ///
