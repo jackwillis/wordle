@@ -1,6 +1,4 @@
-use iced::{
-    button, text_input, window, Align, Button, Column, Element, Sandbox, Settings, Text, TextInput,
-};
+use iced::{text_input, window, Align, Column, Element, Sandbox, Settings, Text, TextInput};
 
 pub fn main() -> iced::Result {
     let settings = Settings {
@@ -18,6 +16,7 @@ pub fn main() -> iced::Result {
 #[derive(Default)]
 struct App {
     text_input_value: String,
+    text_input_is_valid_word: bool,
     text_input: text_input::State,
     words: Vec<String>,
 }
@@ -39,12 +38,13 @@ impl Sandbox for App {
     }
 
     fn title(&self) -> String {
-        String::from("Wordle")
+        "Wordle".into()
     }
 
     fn update(&mut self, message: Message) {
         match message {
             Message::TextInputChanged(value) => {
+                self.text_input_is_valid_word = value.parse::<wordle::Word>().is_ok();
                 self.text_input_value = value;
             }
             Message::TextInputSubmitted => {
@@ -55,25 +55,24 @@ impl Sandbox for App {
     }
 
     fn view(&mut self) -> Element<Message> {
+        let mut column = Column::new().padding(20).align_items(Align::Center);
+
         let title = Text::new("Wordle").size(50);
+        column = column.push(title);
 
         let text_input = TextInput::new(
             &mut self.text_input,
-            "This is the placeholder...",
+            "Submit your guess...",
             &self.text_input_value,
             Message::TextInputChanged,
         )
         .on_submit(Message::TextInputSubmitted)
         .padding(10);
 
-        let mut column = Column::new()
-            .padding(20)
-            .align_items(Align::Center)
-            .push(title)
-            .push(text_input);
+        column = column.push(text_input);
 
         for word in &self.words {
-            let word_label = Text::new(word).size(12);
+            let word_label = Text::new(word).size(20);
             column = column.push(word_label);
         }
 
