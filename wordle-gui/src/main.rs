@@ -2,7 +2,9 @@
 // See <https://github.com/emilk/eframe_template/commit/86fe7b7b87e3a3868ce2648a3f2a63b6a044133f>.
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use iced::{text_input, window, Align, Column, Element, Sandbox, Settings, Text, TextInput};
+use iced::{
+    text_input, window, Align, Color, Column, Element, Font, Sandbox, Settings, Text, TextInput,
+};
 
 pub fn main() -> iced::Result {
     let settings = Settings {
@@ -82,8 +84,10 @@ impl Sandbox for App {
 
         column = column.push(text_input);
 
-        let flash_msg = self.flash.to_owned().unwrap_or_default();
-        let flash = Text::new(flash_msg).size(20);
+        let nbsp = String::from("\u{00A0}");
+        let orangered = Color::from_rgb8(255, 69, 0);
+        let flash_msg = self.flash.to_owned().unwrap_or(nbsp);
+        let flash = Text::new(flash_msg).size(20).color(orangered);
         column = column.push(flash);
 
         for word in &self.words {
