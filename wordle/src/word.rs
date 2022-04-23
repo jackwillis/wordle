@@ -25,15 +25,13 @@ impl fmt::Display for LetterScore {
 
 /// Represents the player's score for guessing one word.
 ///
-/// Wraps a [Vec] of five [LetterScore]s.
-///
 /// ```rust
 /// # use wordle::word::{LetterScore, WordScore};
 /// let o = LetterScore::PresentElsewhere;
 /// let x = LetterScore::PlacedCorrectly;
 /// let u = LetterScore::NotPresent;
 ///
-/// let nice_try = WordScore(vec![o, u, x, x, u]);
+/// let not_a_winner = WordScore(vec![o, u, x, x, u]);
 ///
 /// assert_eq!(format!("{}", nice_try), "O_XX_");
 /// assert!(!nice_try.is_winner());
