@@ -2,9 +2,7 @@
 // See <https://github.com/emilk/eframe_template/commit/86fe7b7b87e3a3868ce2648a3f2a63b6a044133f>.
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use iced::{
-    text_input, window, Align, Color, Column, Element, Font, Sandbox, Settings, Text, TextInput,
-};
+use iced::{text_input, window, Align, Color, Column, Element, Sandbox, Settings, Text, TextInput};
 
 pub fn main() -> iced::Result {
     let settings = Settings {
@@ -19,7 +17,7 @@ pub fn main() -> iced::Result {
     App::run(settings)
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 struct App {
     text_input_value: String,
     text_input_is_valid_word: bool,
@@ -84,11 +82,8 @@ impl Sandbox for App {
 
         column = column.push(text_input);
 
-        let nbsp = String::from("\u{00A0}");
-        let orangered = Color::from_rgb8(255, 69, 0);
-        let flash_msg = self.flash.to_owned().unwrap_or(nbsp);
-        let flash = Text::new(flash_msg).size(20).color(orangered);
-        column = column.push(flash);
+        // Flash
+        column = column.push(Views::display_flash(self.flash.as_ref()));
 
         for word in &self.words {
             let word_label = Text::new(word.to_owned()).size(20);
@@ -96,5 +91,16 @@ impl Sandbox for App {
         }
 
         column.into()
+    }
+}
+
+struct Views {}
+impl Views {
+    fn display_flash(flash: Option<&String>) -> Element<'static, Message> {
+        let nbsp = String::from("\u{00A0}");
+        let orangered = Color::from_rgb8(255, 69, 0);
+        let flash_msg = flash.to_owned().unwrap_or(&nbsp);
+        let flash_text = Text::new(flash_msg).size(20).color(orangered);
+        flash_text.into()
     }
 }
