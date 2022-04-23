@@ -1,132 +1,82 @@
-#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
-
-use eframe::{
-    egui::{self, RichText},
-    epi,
+use iced::{
+    button, text_input, window, Align, Button, Column, Element, Sandbox, Settings, Text, TextInput,
 };
 
-struct WordleApp {
-    game: wordle::Game,
-
-    text_edit_buffer: String,
-    text_edit_flash: String,
+pub fn main() -> iced::Result {
+    let settings = Settings {
+        window: window::Settings {
+            size: (300, 500),
+            resizable: true,
+            decorations: true,
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+    App::run(settings)
 }
 
-impl WordleApp {
+#[derive(Default)]
+struct App {
+    text_input_value: String,
+    text_input: text_input::State,
+    words: Vec<String>,
+}
+
+#[derive(Debug, Clone)]
+enum Message {
+    TextInputChanged(String),
+    TextInputSubmitted,
+}
+
+impl Sandbox for App {
+    type Message = Message;
+
     fn new() -> Self {
         Self {
-            game: wordle::Game::new(wordle::random_word()),
-
-            text_edit_buffer: String::new(),
-            text_edit_flash: String::new(),
+            text_input: text_input::State::focused(), // focus text input when app just opened
+            ..Default::default()
         }
     }
 
-    fn text_edit(&mut self, ui: &mut egui::Ui) {
-        let text_edit = ui.text_edit_singleline(&mut self.text_edit_buffer);
+    fn title(&self) -> String {
+        String::from("Wordle")
+    }
 
-        // Has the user hit enter or clicked away?
-        if text_edit.lost_focus() {
-            self.text_edit_flash.clear();
-
-            let input = self.text_edit_buffer.trim();
-
-            if !input.is_empty() {
-                match input.parse::<wordle::Word>() {
-                    Ok(prediction) => {
-                        // Update game state
-                        self.game = self.game.with_prediction(prediction);
-                    }
-                    Err(msg) => {
-                        self.text_edit_flash = format!("Invalid word: {}", msg);
-                    }
-                }
+    fn update(&mut self, message: Message) {
+        match message {
+            Message::TextInputChanged(value) => {
+                self.text_input_value = value;
             }
-
-            self.text_edit_buffer.clear();
-        }
-
-        // This element should always be focused
-        if !text_edit.has_focus() {
-            text_edit.request_focus();
+            Message::TextInputSubmitted => {
+                self.words.push(self.text_input_value.to_owned());
+                self.text_input_value.clear();
+            }
         }
     }
 
-    fn plays(&mut self, ui: &mut egui::Ui) {
-        for play in &self.game.plays {
-            ui.label(
-                RichText::new(play.prediction.to_string())
-                    .monospace()
-                    .size(24.0),
-            );
-            ui.label(RichText::new(play.score.to_string()).monospace().size(24.0));
+    fn view(&mut self) -> Element<Message> {
+        let title = Text::new("Wordle").size(50);
+
+        let text_input = TextInput::new(
+            &mut self.text_input,
+            "This is the placeholder...",
+            &self.text_input_value,
+            Message::TextInputChanged,
+        )
+        .on_submit(Message::TextInputSubmitted)
+        .padding(10);
+
+        let mut column = Column::new()
+            .padding(20)
+            .align_items(Align::Center)
+            .push(title)
+            .push(text_input);
+
+        for word in &self.words {
+            let word_label = Text::new(word).size(12);
+            column = column.push(word_label);
         }
+
+        column.into()
     }
-}
-
-impl epi::App for WordleApp {
-    fn name(&self) -> &str {
-        "Wordle"
-    }
-
-    fn update(&mut self, ctx: &egui::Context, _frame: &epi::Frame) {
-        egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading(format!("Today's word is: {}", self.game.secret_word));
-
-            ui.label(&self.text_edit_flash);
-
-            self.text_edit(ui);
-
-            self.plays(ui);
-        });
-    }
-
-    fn setup(
-        &mut self,
-        _ctx: &egui::Context,
-        _frame: &epi::Frame,
-        _storage: Option<&dyn epi::Storage>,
-    ) {
-    }
-
-    fn save(&mut self, _storage: &mut dyn epi::Storage) {}
-
-    fn on_exit_event(&mut self) -> bool {
-        true
-    }
-
-    fn on_exit(&mut self) {}
-
-    fn auto_save_interval(&self) -> std::time::Duration {
-        std::time::Duration::from_secs(30)
-    }
-
-    fn max_size_points(&self) -> egui::Vec2 {
-        egui::Vec2::new(1024.0, 2048.0)
-    }
-
-    fn clear_color(&self) -> egui::Rgba {
-        // NOTE: a bright gray makes the shadows of the windows look weird.
-        // We use a bit of transparency so that if the user switches on the
-        // `transparent()` option they get immediate results.
-        egui::Color32::from_rgba_unmultiplied(12, 12, 12, 180).into()
-    }
-
-    fn persist_native_window(&self) -> bool {
-        true
-    }
-
-    fn persist_egui_memory(&self) -> bool {
-        true
-    }
-
-    fn warm_up_enabled(&self) -> bool {
-        false
-    }
-}
-
-fn main() {
-    let app = WordleApp::new();
-    let native_options = eframe::NativeOptions::default();
-    eframe::run_native(Box::new(app), native_options);
 }
