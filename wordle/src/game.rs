@@ -3,7 +3,7 @@ use std::collections::BTreeSet;
 use crate::word::{Word, WordScore};
 
 /// Represents the player's knowledge of "good" and "bad" letters.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct LetterKnowledge {
     pub good: BTreeSet<char>,
     pub bad: BTreeSet<char>,
@@ -52,13 +52,13 @@ pub enum GameStatus {
     Won,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Play {
     pub prediction: Word,
     pub score: WordScore,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Game {
     pub secret_word: Word,
     pub plays: Vec<Play>,

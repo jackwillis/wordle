@@ -19,13 +19,13 @@ pub fn main() -> iced::Result {
     App::run(settings)
 }
 
-#[derive(Default, Debug, Clone)]
+#[derive(Debug, Clone)]
 struct App {
+    game: wordle::Game,
     text_input_value: String,
     text_input_is_valid_word: bool,
     text_input_state: text_input::State,
     flash_message: Option<String>,
-    words: Vec<wordle::Word>,
 }
 
 #[derive(Debug, Clone)]
@@ -50,8 +50,11 @@ impl Sandbox for App {
 
     fn new() -> Self {
         Self {
+            game: wordle::Game::new(wordle::random_word()),
+            text_input_value: String::new(),
+            text_input_is_valid_word: false,
             text_input_state: text_input::State::focused(), // focus text input when app just opened
-            ..Default::default()
+            flash_message: None,
         }
     }
 
@@ -73,7 +76,8 @@ impl Sandbox for App {
             }
             Message::TextInputSubmitted => match self.text_input_value.parse::<wordle::Word>() {
                 Ok(word) => {
-                    self.words.push(word);
+                    self.game = self.game.with_prediction(word.clone());
+                    println!("{:?}", &self.game);
                     self.text_input_value.clear();
                     self.flash_message = None;
                 }
@@ -122,11 +126,18 @@ impl Sandbox for App {
         }
 
         // Guessed words
-        for word in &self.words {
-            let word_label = Text::new(word.to_owned())
-                .size(32)
+        for play in &self.game.plays {
+            let wordle::Play { prediction, score } = play;
+
+            let prediction_label = Text::new(prediction.to_string())
+                .size(24)
                 .font(NANUM_GOTHIC_REGULAR);
-            column = column.push(word_label);
+            column = column.push(prediction_label);
+
+            let score_label = Text::new(score.to_string())
+                .size(24)
+                .font(NANUM_GOTHIC_REGULAR);
+            column = column.push(score_label);
         }
 
         column.into()
