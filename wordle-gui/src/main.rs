@@ -10,7 +10,7 @@ pub fn main() -> iced::Result {
     let settings = Settings {
         window: window::Settings {
             size: (300, 500),
-            resizable: true,
+            resizable: false,
             decorations: true,
             ..Default::default()
         },
@@ -49,8 +49,10 @@ impl Sandbox for App {
     type Message = Message;
 
     fn new() -> Self {
+        let game = wordle::Game::new(wordle::random_word());
+        println!("Secret word is {}", game.secret_word);
         Self {
-            game: wordle::Game::new(wordle::random_word()),
+            game,
             text_input_value: String::new(),
             text_input_is_valid_word: false,
             text_input_state: text_input::State::focused(), // focus text input when app just opened
@@ -66,18 +68,16 @@ impl Sandbox for App {
         match message {
             Message::TextInputChanged(value) => {
                 self.text_input_is_valid_word = value.parse::<wordle::Word>().is_ok();
-
-                let text_input_value = value
+                self.text_input_value = value
                     .to_uppercase()
                     .chars()
                     .filter(|c| c.is_ascii_alphabetic())
+                    .take(5)
                     .collect::<String>();
-                self.text_input_value = text_input_value;
             }
             Message::TextInputSubmitted => match self.text_input_value.parse::<wordle::Word>() {
                 Ok(word) => {
-                    self.game = self.game.with_prediction(word.clone());
-                    println!("{:?}", &self.game);
+                    self.game = self.game.with_prediction(word);
                     self.text_input_value.clear();
                     self.flash_message = None;
                 }
@@ -90,15 +90,36 @@ impl Sandbox for App {
 
     fn view(&mut self) -> Element<Message> {
         // Layout
-        let mut column = Column::new()
-            .padding(20)
-            .align_items(Align::Center)
-            .spacing(10);
+        let mut column = basic_column();
 
         // Title
         let title_label = "Wordle";
         let title = Text::new(title_label).size(50).font(NANUM_GOTHIC_BOLD);
         column = column.push(title);
+
+        // Main content
+        let main_content = match self.game.calculate_status() {
+            wordle::GameStatus::Active => self.view_active(),
+            wordle::GameStatus::Lost => self.view_lost(),
+            wordle::GameStatus::Won => self.view_won(),
+        };
+        column = column.push(main_content);
+
+        column.into()
+    }
+}
+
+fn basic_column() -> Column<'static, Message> {
+    let column = Column::new()
+        .padding(20)
+        .align_items(Align::Center)
+        .spacing(10);
+    column
+}
+
+impl App {
+    fn view_active(&mut self) -> Element<Message> {
+        let mut column = basic_column();
 
         // Text input
         let placeholder = "Enter your guess";
@@ -130,15 +151,43 @@ impl Sandbox for App {
             let wordle::Play { prediction, score } = play;
 
             let prediction_label = Text::new(prediction.to_string())
-                .size(24)
+                .size(14)
                 .font(NANUM_GOTHIC_REGULAR);
             column = column.push(prediction_label);
 
             let score_label = Text::new(score.to_string())
-                .size(24)
+                .size(14)
                 .font(NANUM_GOTHIC_REGULAR);
             column = column.push(score_label);
         }
+
+        column.into()
+    }
+
+    fn view_won(&mut self) -> Element<Message> {
+        let mut column = basic_column();
+
+        column = column.push(Text::new("You won").font(NANUM_GOTHIC_REGULAR).size(40));
+
+        column = column.push(
+            Text::new(format!("The word was {}.", self.game.secret_word))
+                .font(NANUM_GOTHIC_REGULAR)
+                .size(20),
+        );
+
+        column.into()
+    }
+
+    fn view_lost(&mut self) -> Element<Message> {
+        let mut column = basic_column();
+
+        column = column.push(Text::new("You lost").font(NANUM_GOTHIC_REGULAR).size(40));
+
+        column = column.push(
+            Text::new(format!("The word was {}.", self.game.secret_word))
+                .font(NANUM_GOTHIC_REGULAR)
+                .size(20),
+        );
 
         column.into()
     }
