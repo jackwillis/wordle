@@ -12,10 +12,9 @@ Word guessing game.
 
 Use official installer, [rustup](https://rustup.rs/).
 
-If using Visual Studio Code, install the
-[rust-analyzer plugin](https://marketplace.visualstudio.com/items?itemName=matklad.rust-analyzer),
-and uninstall the [official Rust one](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust) if you have it.
-Rust-analyzer is better and active and it's being phased in to replace the other.
+For Visual Studio Code, the
+[rust-analyzer plugin](https://marketplace.visualstudio.com/items?itemName=matklad.rust-analyzer)
+is recommended.
 
 ### Using Cargo
 
@@ -38,7 +37,10 @@ See: [The Cargo Book](https://doc.rust-lang.org/cargo/index.html),
 
 ### Linux dependencies
 
-Ubuntu: `sudo apt install libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libspeechd-dev libxkbcommon-dev libssl-dev`
+As [required by](https://github.com/emilk/eframe_template#testing-locally)
+`eframe_template` library:
+
+Ubuntu: `sudo apt install build-essential cmake libfreetype-dev libexpat1-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libspeechd-dev libxkbcommon-dev libssl-dev`
 
 Fedora: `sudo dnf install clang clang-devel clang-tools-extra speech-dispatcher-devel libxkbcommon-devel pkg-config openssl-devel libxcb-devel`
 

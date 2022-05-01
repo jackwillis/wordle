@@ -23,7 +23,6 @@ pub fn main() -> iced::Result {
 struct App {
     game: wordle::Game,
     text_input_value: String,
-    text_input_is_valid_word: bool,
     text_input_state: text_input::State,
     flash_message: Option<String>,
 }
@@ -54,7 +53,6 @@ impl Sandbox for App {
         Self {
             game,
             text_input_value: String::new(),
-            text_input_is_valid_word: false,
             text_input_state: text_input::State::focused(), // focus text input when app just opened
             flash_message: None,
         }
@@ -67,7 +65,6 @@ impl Sandbox for App {
     fn update(&mut self, message: Message) {
         match message {
             Message::TextInputChanged(value) => {
-                self.text_input_is_valid_word = value.parse::<wordle::Word>().is_ok();
                 self.text_input_value = value
                     .to_uppercase()
                     .chars()
