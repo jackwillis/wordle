@@ -9,3 +9,6 @@ publish = false
 [dependencies]
 wordle = { path = "../wordle" }
 iced = "0.3"
+
+[target.x86_64-unknown-linux-gnu.dependencies]
+iced = { version = "0.3", default-features = false, features = ["glow"] }

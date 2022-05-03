@@ -21,28 +21,29 @@ is recommended.
 Rust's command-line tool, Cargo, manages the build.
 Some useful commands:
 
-* `cargo test`  
+`cargo test`  
 runs unit tests
-* `cargo doc --open`  
-opens documentation in browser
-* `cargo run -p wordle`  
+
+`cargo run -p wordle`  
 starts minimalist command-line game
-* `cargo run -p wordle-gui`  
+
+`cargo run -p wordle-gui`  
 starts cross-platform desktop gui game
-* `cargo build --release`  
-builds release binaries in "./target/release"
+
+`cargo build --release`  
+builds release binaries in "./target/"
+
+`cargo doc --open`  
+opens documentation in browser
 
 See: [The Cargo Book](https://doc.rust-lang.org/cargo/index.html),
 "[Build Commands](https://doc.rust-lang.org/cargo/commands/build-commands.html)."
 
-### Linux dependencies
+### Linux build dependencies
 
-As [required by](https://github.com/emilk/eframe_template#testing-locally)
-`eframe_template` library:
+GCC, cmake, libfreetype headers, libfontconfig headers
 
-Ubuntu: `sudo apt install build-essential cmake libfreetype-dev libexpat1-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libspeechd-dev libxkbcommon-dev libssl-dev`
-
-Fedora: `sudo dnf install clang clang-devel clang-tools-extra speech-dispatcher-devel libxkbcommon-devel pkg-config openssl-devel libxcb-devel`
+Ubuntu/Debian: `sudo apt install build-essential cmake libfreetype-dev libfontconfig-dev`
 
 ### Continuous integration
 
