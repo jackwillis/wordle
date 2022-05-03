@@ -13,15 +13,24 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
-      - uses: actions-rs/cargo@v1
+      - name: Build for target x86_64-unknown-linux-gnu
+        uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --release
+          args: --release --target x86_64-unknown-linux-gnu
+          env:
+            # <https://msfjarvis.dev/posts/building-static-rust-binaries-for-linux/>
+            RUSTFLAGS: -C target-feature=+crt-static
+      - name: Rename binaries
+        run: >
+          mv target/x86_64-unknown-linux-gnu/release/wordle wordle-x86_64-linux;
+          mv target/x86_64-unknown-linux-gnu/release/wordle-gui wordle-gui-x86_64-linux;
+          
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
             LICENSE
-            target/release/wordle
-            target/release/wordle-gui
+            wordle-x86_64-linux
+            wordle-gui-x86_64-linux
