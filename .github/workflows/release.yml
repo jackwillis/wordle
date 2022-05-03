@@ -18,8 +18,6 @@ jobs:
         with:
           command: build
           args: --release --target x86_64-unknown-linux-gnu
-          env: 
-            RUSTFLAGS: -C target-feature=+crt-static # <https://msfjarvis.dev/posts/building-static-rust-binaries-for-linux/>
       - name: Rename binaries
         run: >
           mv target/x86_64-unknown-linux-gnu/release/wordle wordle-x86_64-linux;
