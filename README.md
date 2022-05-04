@@ -21,27 +21,23 @@ is recommended.
 Rust's command-line tool, Cargo, manages the build.
 Some useful commands:
 
-`cargo test`  
-runs unit tests
-
-`cargo run -p wordle`  
-starts minimalist command-line game
-
-`cargo run -p wordle-gui`  
-starts cross-platform desktop gui game
-
-`cargo build --release`  
-builds release binaries in "./target/"
-
-`cargo doc --open`  
-opens documentation in browser
+* `cargo test`: runs unit tests
+* `cargo run -p wordle`: starts minimalist command-line game
+* `cargo run -p wordle-gui`: starts cross-platform desktop gui game
+* `cargo build --release`: builds release binaries in "./target/"
+* `cargo doc --open`: opens documentation in browser
 
 See: [The Cargo Book](https://doc.rust-lang.org/cargo/index.html),
 "[Build Commands](https://doc.rust-lang.org/cargo/commands/build-commands.html)."
 
 ### Linux build dependencies
 
-GCC, cmake, libfreetype headers, libfontconfig headers
+* GCC
+* GNU make
+* cmake
+* glibc headers
+* libfreetype headers
+* libfontconfig headers
 
 Ubuntu/Debian: `sudo apt install build-essential cmake libfreetype-dev libfontconfig-dev`
 
