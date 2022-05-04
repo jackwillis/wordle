@@ -38,7 +38,7 @@ jobs:
         with:
           files: |
             LICENSE
-            wordle-x86_64-linux
-            wordle-gui-x86_64-linux
+            wordle-linux-x86_64
+            wordle-gui-linux-x86_64
             wordle.exe
             wordle-gui.exe
