@@ -20,12 +20,11 @@ jobs:
           command: build
           args: --release -p wordle-gui
       - name: Sign the binary
-        uses: DanaBear/code-sign-action@v4
+        uses: dlemstra/code-sign-action@v1
         with:
           certificate: '${{ secrets.CERTIFICATE }}'
-          password: '${{ secrets.CERT_PASSWORD }}'
-          certificatesha1: '${{ secrets.CERT_HASH }}'
           folder: 'target/release'
+          recursive: false
       - name: Rename the binary
         run: mv target/release/wordle-gui.exe wordle.exe
       - name: Create GitHub release
