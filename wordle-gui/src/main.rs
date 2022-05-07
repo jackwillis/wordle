@@ -9,7 +9,7 @@ use iced::{
 pub fn main() -> iced::Result {
     let settings = Settings {
         window: window::Settings {
-            size: (600, 800),
+            size: (480, 640),
             resizable: false,
             decorations: true,
             ..Default::default()
@@ -148,12 +148,12 @@ impl App {
             let wordle::Play { prediction, score } = play;
 
             let prediction_label = Text::new(prediction.to_string())
-                .size(14)
+                .size(30)
                 .font(NANUM_GOTHIC_REGULAR);
             column = column.push(prediction_label);
 
             let score_label = Text::new(score.to_string())
-                .size(14)
+                .size(30)
                 .font(NANUM_GOTHIC_REGULAR);
             column = column.push(score_label);
         }
@@ -169,7 +169,7 @@ impl App {
         column = column.push(
             Text::new(format!("The word was {}.", self.game.secret_word))
                 .font(NANUM_GOTHIC_REGULAR)
-                .size(20),
+                .size(30),
         );
 
         column.into()
