@@ -9,7 +9,7 @@ use iced::{
 pub fn main() -> iced::Result {
     let settings = Settings {
         window: window::Settings {
-            size: (300, 500),
+            size: (600, 800),
             resizable: false,
             decorations: true,
             ..Default::default()
