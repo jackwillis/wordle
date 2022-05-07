@@ -1,6 +1,6 @@
 on: [push, pull_request]
 
-name: Code coverage
+name: Collect test coverage information
 
 jobs:
   codecov:

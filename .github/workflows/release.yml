@@ -17,7 +17,6 @@ jobs:
           override: true
       - uses: actions-rs/cargo@v1
         with:
-          use-cross: true
           command: build
           args: --release -p wordle-gui
       - name: Rename binary
