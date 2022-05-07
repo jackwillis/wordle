@@ -19,15 +19,15 @@ jobs:
         with:
           command: build
           args: --release -p wordle-gui
-      - name: Rename binary
-        run: mv target/release/wordle-gui.exe wordle.exe
-      - name: Code sign a file with pfx certificate
+      - name: Sign the binary
         uses: DanaBear/code-sign-action@v4
         with:
           certificate: '${{ secrets.CERTIFICATE }}'
           password: '${{ secrets.CERT_PASSWORD }}'
           certificatesha1: '${{ secrets.CERT_HASH }}'
           folder: 'target/release'
+      - name: Rename the binary
+        run: mv target/release/wordle-gui.exe wordle.exe
       - name: Create GitHub release
         uses: softprops/action-gh-release@v1
         with:
