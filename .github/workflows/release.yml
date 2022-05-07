@@ -3,7 +3,7 @@ on:
     tags:
       - '*'
 
-name: Build Windows binary and create GitHub release
+name: Github release
 
 jobs:
   build-and-release:
@@ -21,6 +21,13 @@ jobs:
           args: --release -p wordle-gui
       - name: Rename binary
         run: mv target/release/wordle-gui.exe wordle.exe
+      - name: Code sign a file with pfx certificate
+        uses: DanaBear/code-sign-action@v4
+        with:
+          certificate: '${{ secrets.CERTIFICATE }}'
+          password: '${{ secrets.CERT_PASSWORD }}'
+          certificatesha1: '${{ secrets.CERT_HASH }}'
+          folder: 'target/release'
       - name: Create GitHub release
         uses: softprops/action-gh-release@v1
         with:
