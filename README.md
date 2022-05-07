@@ -43,5 +43,6 @@ Ubuntu/Debian: `sudo apt install build-essential cmake libfreetype-dev libfontco
 
 ### Continuous integration
 
-Run the "install-git-hooks" script before using Git.
-See also GitHub workflows.
+Run the "install-git-hooks" script before making changes to this project.
+
+See continuous integration tasks in ".github/workflows/".
