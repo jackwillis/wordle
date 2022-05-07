@@ -29,10 +29,10 @@ jobs:
             folder: 'target/release'
             recursive: false
       - name: Rename the binary
-        run: mv target/release/wordle-gui.exe wordle.exe
+        run: mv target/release/wordle-gui.exe Wordle.exe
       - name: Create GitHub release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            LICENSE
-            wordle.exe
+            LICENSE.html
+            Wordle.exe
