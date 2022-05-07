@@ -20,11 +20,14 @@ jobs:
           command: build
           args: --release -p wordle-gui
       - name: Sign the binary
-        uses: dlemstra/code-sign-action@v1
-        with:
-          certificate: '${{ secrets.CERTIFICATE }}'
-          folder: 'target/release'
-          recursive: false
+        uses: GabrielAcostaEngler/signtool-code-sign@main
+          with:
+            certificate: '${{ secrets.CERTIFICATE }}'
+            cert-password: '${{ secrets.CERTIFICATE_PASSWORD }}'
+            cert-sha1: '${{ secrets.CERTIFICATE_SHA1_HASH }}'
+            cert-description: 'Wordle by Jack Willis'
+            folder: 'target/release'
+            recursive: false
       - name: Rename the binary
         run: mv target/release/wordle-gui.exe wordle.exe
       - name: Create GitHub release
