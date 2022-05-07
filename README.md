@@ -1,10 +1,10 @@
 # wordle
 
+Word guessing game. Graphical application for Windows and Linux.
+
 [![Automated tests](https://github.com/jackwillis/wordle/actions/workflows/tests.yml/badge.svg)](https://github.com/jackwillis/wordle/actions/workflows/build.yml)
 [![Code coverage](https://codecov.io/gh/jackwillis/wordle/branch/main/graph/badge.svg?token=2Y9FF6ZM9Y)](https://codecov.io/gh/jackwillis/wordle)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
-Word guessing game.
 
 ## Building this project
 
