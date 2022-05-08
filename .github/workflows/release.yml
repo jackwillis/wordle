@@ -45,6 +45,7 @@ jobs:
             Wordle.exe
             --set-icon wordle-gui/images/icon.ico
             --set-file-version "{{ github.ref_name }}"
+            --set-product-version "{{ github.ref_name }}";
       - name: Zip the package
         run: zip Wordle-${{ github.ref_name }} Wordle.exe LICENSE.html;
       - name: Create GitHub release
