@@ -19,15 +19,14 @@ jobs:
         with:
           command: build
           args: --release -p wordle-gui
-      - name: Sign the binary
-        uses: GabrielAcostaEngler/signtool-code-sign@main
-        with:
-          certificate: '${{ secrets.CERTIFICATE }}'
-          cert-password: '${{ secrets.CERTIFICATE_PASSWORD }}'
-          cert-sha1: '${{ secrets.CERTIFICATE_SHA1_HASH }}'
-          cert-description: 'Wordle by Jack Willis'
-          folder: 'target/release'
-          recursive: false
+      - name: Sign Windows Binary
+        uses: jonfriesen/windows-signer-action@v1.0.0
+        env:
+          NAME: Jack Willis
+          DOMAIN: https://www.attac.us
+          BINARY: target/release/wordle-gui.exe
+          WINDOWS_CERT: ${{ secrets.WINDOWS_CERT }}
+          WINDOWS_KEY: ${{ secrets.WINDOWS_KEY }}
       - name: Rename the binary
         run: mv target/release/wordle-gui.exe Wordle.exe
       - name: Create GitHub release

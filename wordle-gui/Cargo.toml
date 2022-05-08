@@ -3,6 +3,7 @@ name = "wordle-gui"
 version = "0.4.0"
 edition = "2021"
 publish = false
+default-run = "wordle-gui"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -12,3 +13,9 @@ iced = "0.3.0"
 
 [target.x86_64-unknown-linux-gnu.dependencies]
 iced = { version = "0.3.0", default-features = false, features = ["glow"] }
+
+[target.'cfg(windows)'.dependencies]
+codesign = "0.2"
+
+[[bin]]
+name = "post-build-windows"
