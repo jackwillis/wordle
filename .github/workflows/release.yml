@@ -22,18 +22,20 @@ jobs:
           command: build
           args: --release -p wordle-gui --target x86_64-pc-windows-gnu
       - name: Sign Windows binary
-        uses: jonfriesen/windows-signer-action@v1.0.0
-        env:
-          NAME: Jack Willis
-          DOMAIN: https://www.attac.us
-          BINARY: target/x86_64-pc-windows-gnu/release/wordle-gui.exe
-          WINDOWS_CERT: ${{ secrets.WINDOWS_CERT }}
-          WINDOWS_KEY: ${{ secrets.WINDOWS_KEY }}
+        run:
+          echo "${{ secrets.WINDOWS_CERT }}" > www_attac_us.crt
+          echo "${{ secrets.WINDOWS_KEY }}" > www_attac_us.key
+          sudo apt install osslsigncode
+          osslsigncode sign -certs www_attac_us.crt -key www_attac_us.key \
+            -n "Wordle" -i https://www.attac.us/ \
+            -t http://timestamp.digicert.com \
+            -in target/x86_64-pc-windows-gnu/release/wordle-gui.exe \
+            -out Wordle.exe
       - name: Zip the package
         run: >
           export DIST=Wordle-${{ github.ref_name }}
           mkdir $DIST/
-          cp target/x86_64-pc-windows-gnu/release/wordle-gui.exe $DIST/Wordle.exe
+          cp Wordle.exe $DIST/
           cp LICENSE.html $DIST/
           sudo apt install zip
           zip -r $DIST.zip $DIST
