@@ -35,7 +35,7 @@ See: [The Cargo Book](https://doc.rust-lang.org/cargo/index.html),
 * GCC
 * GNU make
 * cmake
-* glibc headers
+* GNU libc headers
 * libfreetype headers
 * libfontconfig headers
 
