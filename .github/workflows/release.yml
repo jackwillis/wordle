@@ -7,7 +7,7 @@ name: Github release
 
 jobs:
   build-and-release:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
@@ -15,23 +15,29 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
+          target: x86_64-pc-windows-gnu
       - uses: actions-rs/cargo@v1
         with:
+          use-cross: true
           command: build
-          args: --release -p wordle-gui
+          args: --release -p wordle-gui --target x86_64-pc-windows-gnu
       - name: Sign Windows Binary
         uses: jonfriesen/windows-signer-action@v1.0.0
         env:
           NAME: Jack Willis
           DOMAIN: https://www.attac.us
-          BINARY: target/release/wordle-gui.exe
+          BINARY: target/x86_64-pc-windows-gnu/release/wordle-gui.exe
           WINDOWS_CERT: ${{ secrets.WINDOWS_CERT }}
           WINDOWS_KEY: ${{ secrets.WINDOWS_KEY }}
-      - name: Rename the binary
-        run: mv target/release/wordle-gui.exe Wordle.exe
+      - name: Zip the package
+        run: >
+          export DIST=Wordle-${{ github.ref_name }}
+          mkdir $DIST/
+          cp target/x86_64-pc-windows-gnu/release/wordle-gui.exe $DIST/Wordle.exe
+          cp LICENSE.html $DIST/
+          sudo apt install zip
+          zip -r $DIST.zip $DIST
       - name: Create GitHub release
         uses: softprops/action-gh-release@v1
         with:
-          files: |
-            LICENSE.html
-            Wordle.exe
+          files: Wordle-${{ github.ref_name }}.zip
