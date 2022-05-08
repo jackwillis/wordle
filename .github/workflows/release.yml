@@ -21,24 +21,30 @@ jobs:
           use-cross: true
           command: build
           args: --release -p wordle-gui --target x86_64-pc-windows-gnu
+      - name: Install build dependencies
+        run:
+          sudo dpkg --add-architecture i386;
+          sudo apt-get update;
+          sudo apt-get install -y wine64 wine32 osslsigncode zip;
       - name: Sign Windows binary
         run:
           echo "${{ secrets.WINDOWS_CERT }}" > www_attac_us.crt;
           echo "${{ secrets.WINDOWS_KEY }}" > www_attac_us.key;
-          sudo apt install osslsigncode;
-          osslsigncode sign -certs www_attac_us.crt -key www_attac_us.key
+          osslsigncode sign -verbose -certs www_attac_us.crt -key www_attac_us.key
             -n "Wordle" -i https://www.attac.us/ 
             -t http://timestamp.digicert.com
             -in target/x86_64-pc-windows-gnu/release/wordle-gui.exe
             -out Wordle.exe;
-      - name: Zip the package
+      - name: Edit executable resources
         run: >
-          export DIST=Wordle-${{ github.ref_name }};
-          mkdir $DIST/;
-          cp Wordle.exe $DIST/;
-          cp LICENSE.html $DIST/;
-          sudo apt install zip;
-          zip -r $DIST.zip $DIST/;
+          cp wordle-gui/vendor/rcedit-1.1.1/rcedit-x64.exe .;
+          chmod +x rcedit-x64.exe;
+          ./rcedit-x64.exe
+            Wordle.exe
+            --set-icon wordle-gui/images/icon.ico
+            --set-file-version "{{ github.ref_name }}"
+      - name: Zip the package
+        run: zip Wordle-${{ github.ref_name }} Wordle.exe LICENSE.html;
       - name: Create GitHub release
         uses: softprops/action-gh-release@v1
         with:
