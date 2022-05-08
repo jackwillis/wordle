@@ -13,9 +13,3 @@ iced = "0.3.0"
 
 [target.x86_64-unknown-linux-gnu.dependencies]
 iced = { version = "0.3.0", default-features = false, features = ["glow"] }
-
-[target.'cfg(windows)'.dependencies]
-codesign = "0.2"
-
-[[bin]]
-name = "post-build-windows"

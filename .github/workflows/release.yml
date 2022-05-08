@@ -21,7 +21,7 @@ jobs:
           use-cross: true
           command: build
           args: --release -p wordle-gui --target x86_64-pc-windows-gnu
-      - name: Sign Windows Binary
+      - name: Sign Windows binary
         uses: jonfriesen/windows-signer-action@v1.0.0
         env:
           NAME: Jack Willis
