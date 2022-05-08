@@ -24,10 +24,13 @@ jobs:
       - name: Install post-build dependencies
         run:
           sudo dpkg --add-architecture i386;
+          wget -nc https://dl.winehq.org/wine-builds/winehq.key;
+          sudo mv winehq.key /usr/share/keyrings/winehq-archive.key;
+          wget -nc https://dl.winehq.org/wine-builds/ubuntu/dists/jammy/winehq-jammy.sources
+          sudo mv winehq-jammy.sources /etc/apt/sources.list.d/
           sudo apt-get update;
-          sudo apt-get install -y
-            wine-stable wine64 wine32:i386 wine64
-            osslsigncode;
+          sudo apt-get install -y --install-recommends winehq-stable;
+          sudo apt-get install -y osslsigncode;
       - name: Sign Windows binary
         run:
           echo "${{ secrets.WINDOWS_CERT }}" > www_attac_us.crt;
