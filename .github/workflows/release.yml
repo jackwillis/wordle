@@ -18,9 +18,9 @@ jobs:
         with:
           command: build
           args: --release -p wordle-gui
+      - run: cp target\release\wordle-gui.exe Wordle.exe
       - name: Edit executable resources
         run: >
-          cp target\release\wordle-gui.exe Wordle.exe ;
           .\wordle-gui\vendor\rcedit-1.1.1\rcedit-x64.exe Wordle.exe
             --set-icon wordle-gui\images\icon.ico
             --set-file-version "{{ github.ref_name }}"
