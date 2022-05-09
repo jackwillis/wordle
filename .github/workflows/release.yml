@@ -39,8 +39,7 @@ jobs:
         run: >
           cp wordle-gui/vendor/rcedit-1.1.1/rcedit-x64.exe .;
           chmod +x rcedit-x64.exe;
-          wine rcedit-x64.exe
-            Wordle.exe
+          wine rcedit-x64.exe Wordle.exe
             --set-icon wordle-gui/images/icon.ico
             --set-file-version "{{ github.ref_name }}"
             --set-product-version "{{ github.ref_name }}";
