@@ -8,21 +8,28 @@ Write-Output $args
 
 $tag = $args[0]
 if (!$tag) {
-  throw "Usage: $($MyInvocation.MyCommand.Name) [tag]"
+  throw "Usage: $($MyInvocation.MyCommand.Name) [tag] # Must supply tag as first command-line argument"
 }
 
-New-Item -Force -ItemType directory -Path dist\
-Copy-Item -Path target\release\wordle-gui.exe -Destination dist\Wordle.exe
+# Create dist\ directory
 
-.\wordle-gui\vendor\rcedit-1.1.1\rcedit-x64.exe dist\Wordle.exe `
+New-Item -Force -ItemType directory -Path dist\
+Copy-Item target\release\wordle-gui.exe dist\Wordle.exe
+
+#
+
+$RcEdit = 'wordle-gui\vendor\rcedit-1.1.1\rcedit-x64.exe'
+& $RcEdit dist\Wordle.exe `
   --set-icon wordle-gui\images\icon.ico `
   --set-file-version ${tag} `
   --set-product-version ${tag}
+
+# Compress archive
+
+$Assets = @( "LICENSE.html" , "dist\Wordle.exe" )
 
 $ArchivePath = "dist\Wordle-${tag}.zip"
 Write-Output $ArchivePath
 
 Set-PSDebug -Off # next command is too noisy
-Compress-Archive -Force `
-  -LiteralPath LICENSE.html , dist\Wordle.exe `
-  -DestinationPath "dist\Wordle-${tag}.zip"
+Compress-Archive -Force -LiteralPath $Assets -DestinationPath $ArchivePath
