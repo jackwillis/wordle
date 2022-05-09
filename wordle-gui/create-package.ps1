@@ -1,4 +1,10 @@
-Set-PSDebug -Trace 1
+# turn trace on
+Set-PSDebug -Trace 2
+
+# print the environment
+Get-ChildItem env:
+Write-Output $MyInvocation.MyCommand
+Write-Output $args
 
 $tag = $args[0]
 if (!$tag) {
@@ -12,6 +18,11 @@ Copy-Item -Path target\release\wordle-gui.exe -Destination dist\Wordle.exe
   --set-icon wordle-gui\images\icon.ico `
   --set-file-version ${tag} `
   --set-product-version ${tag}
+
+$ArchivePath = "dist\Wordle-${tag}.zip"
+Write-Output $ArchivePath
+
+Set-PSDebug -Trace 0
 
 Compress-Archive -Force `
   -LiteralPath LICENSE.html , dist\Wordle.exe `

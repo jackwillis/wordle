@@ -23,4 +23,4 @@ jobs:
       - name: Create GitHub release
         uses: softprops/action-gh-release@v1
         with:
-          files: Wordle-${{ github.ref_name }}.zip
+          files: dist\Wordle-${{ github.ref_name }}.zip
