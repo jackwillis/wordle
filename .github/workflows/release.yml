@@ -7,44 +7,29 @@ name: Github release
 
 jobs:
   build-and-release:
-    runs-on: ubuntu-20.04
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
           toolchain: stable
-          override: true
-          target: x86_64-pc-windows-gnu
       - uses: actions-rs/cargo@v1
         with:
-          use-cross: true
           command: build
-          args: --release -p wordle-gui --target x86_64-pc-windows-gnu
-      - name: Install post-build dependencies
-        run:
-          sudo dpkg --add-architecture i386;
-          sudo apt-get update;
-          sudo apt-get install wine-stable osslsigncode;
-      - name: Sign Windows binary
-        run:
-          echo "${{ secrets.WINDOWS_CERT }}" > www_attac_us.crt;
-          echo "${{ secrets.WINDOWS_KEY }}" > www_attac_us.key;
-          osslsigncode sign -verbose -certs www_attac_us.crt -key www_attac_us.key
-            -n "Wordle" -i https://www.attac.us/ 
-            -t http://timestamp.digicert.com
-            -in target/x86_64-pc-windows-gnu/release/wordle-gui.exe
-            -out Wordle.exe;
+          args: --release -p wordle-gui
       - name: Edit executable resources
         run: >
-          cp wordle-gui/vendor/rcedit-1.1.1/rcedit-x64.exe .;
-          chmod +x rcedit-x64.exe;
-          wine rcedit-x64.exe Wordle.exe
-            --set-icon wordle-gui/images/icon.ico
+          cp target\release\wordle-gui.exe Wordle.exe ;
+          .\wordle-gui\vendor\rcedit-1.1.1\rcedit-x64.exe Wordle.exe
+            --set-icon wordle-gui\images\icon.ico
             --set-file-version "{{ github.ref_name }}"
-            --set-product-version "{{ github.ref_name }}";
+            --set-product-version "{{ github.ref_name }}" ;
       - name: Zip the package
-        run: zip Wordle-${{ github.ref_name }} Wordle.exe LICENSE.html;
+        run: >
+          Compress-Archive
+            -LiteralPath LICENSE.html , Wordle.exe
+            -DestinationPath Wordle-${{ github.ref_name }} ;
       - name: Create GitHub release
         uses: softprops/action-gh-release@v1
         with:
