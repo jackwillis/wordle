@@ -22,8 +22,7 @@ Copy-Item -Path target\release\wordle-gui.exe -Destination dist\Wordle.exe
 $ArchivePath = "dist\Wordle-${tag}.zip"
 Write-Output $ArchivePath
 
-Set-PSDebug -Trace 0
-
+Set-PSDebug -Off # next command is too noisy
 Compress-Archive -Force `
   -LiteralPath LICENSE.html , dist\Wordle.exe `
   -DestinationPath "dist\Wordle-${tag}.zip"
