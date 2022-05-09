@@ -7,7 +7,7 @@ name: Github release
 
 jobs:
   build-and-release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
@@ -24,13 +24,8 @@ jobs:
       - name: Install post-build dependencies
         run:
           sudo dpkg --add-architecture i386;
-          wget -nc https://dl.winehq.org/wine-builds/winehq.key;
-          sudo mv winehq.key /usr/share/keyrings/winehq-archive.key;
-          wget -nc https://dl.winehq.org/wine-builds/ubuntu/dists/jammy/winehq-jammy.sources;
-          sudo mv winehq-jammy.sources /etc/apt/sources.list.d/;
           sudo apt-get update;
-          sudo apt-get install -y --install-recommends winehq-stable;
-          sudo apt-get install -y osslsigncode;
+          sudo apt-get install wine-stable osslsigncode;
       - name: Sign Windows binary
         run:
           echo "${{ secrets.WINDOWS_CERT }}" > www_attac_us.crt;
@@ -44,7 +39,7 @@ jobs:
         run: >
           cp wordle-gui/vendor/rcedit-1.1.1/rcedit-x64.exe .;
           chmod +x rcedit-x64.exe;
-          ./rcedit-x64.exe
+          wine rcedit-x64.exe
             Wordle.exe
             --set-icon wordle-gui/images/icon.ico
             --set-file-version "{{ github.ref_name }}"
