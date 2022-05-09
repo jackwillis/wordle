@@ -13,8 +13,6 @@ Copy-Item -Path target\release\wordle-gui.exe -Destination dist\Wordle.exe
   --set-file-version ${tag} `
   --set-product-version ${tag}
 
-Set-PSDebug -Trace 0
-
 Compress-Archive -Force `
   -LiteralPath LICENSE.html , dist\Wordle.exe `
   -DestinationPath "dist\Wordle-${tag}.zip"
