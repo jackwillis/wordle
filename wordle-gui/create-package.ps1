@@ -16,12 +16,10 @@ Write-Output $version
 New-Item -Force -ItemType directory -Path dist\
 Copy-Item target\release\wordle-gui.exe dist\Wordle.exe
 
-# Edit executable resources: application icon, some strings.
+# Edit application icon
 # Use vendored application, rcedit.
 $rcEdit = 'wordle-gui\vendor\rcedit-1.1.1\rcedit-x64.exe'
-& $rcEdit dist\Wordle.exe `
-  --set-icon wordle-gui\images\icon.ico `
-  --set-product-version ${version}
+& $rcEdit dist\Wordle.exe --set-icon wordle-gui\images\icon.ico 
 
 # Compress archive
 
