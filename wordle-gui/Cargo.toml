@@ -12,12 +12,9 @@ default-run = "wordle-gui"
 wordle = { path = "../wordle" }
 
 # GUI framework
-iced = "0.3.0"
+iced = { version = "0.3.0", default-features = false, features = ["glow"] }
+# Use glow renderer (OpenGL target) for greater compatibility
 
 [build-dependencies]
 # Statically link the Visual C++ runtime when using the MSVC toolchain.
 static_vcruntime = "2.0"
-
-# Use glow renderer on Linux for greater compatibility
-[target.x86_64-unknown-linux-gnu.dependencies]
-iced = { version = "0.3.0", default-features = false, features = ["glow"] }
