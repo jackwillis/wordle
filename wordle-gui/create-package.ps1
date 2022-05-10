@@ -1,35 +1,33 @@
-# turn trace on
+# Debug stuff
 Set-PSDebug -Trace 2
-
-# print the environment
 Get-ChildItem env:
 Write-Output $MyInvocation.MyCommand
 Write-Output $args
 
-$tag = $args[0]
-if (!$tag) {
-  throw "Usage: $($MyInvocation.MyCommand.Name) [tag] # Must supply tag as first command-line argument"
+# Get $version from command line
+$version = $args[0]
+if (!$version) {
+  throw "Usage: $($MyInvocation.MyCommand.Name) [version]
+  # Must supply version as first command-line argument"
 }
+Write-Output $version
 
 # Create dist\ directory
-
 New-Item -Force -ItemType directory -Path dist\
 Copy-Item target\release\wordle-gui.exe dist\Wordle.exe
 
-#
-
-$RcEdit = 'wordle-gui\vendor\rcedit-1.1.1\rcedit-x64.exe'
-& $RcEdit dist\Wordle.exe `
+# Edit executable resources: application icon, some strings.
+# Use vendored application, rcedit.
+$rcEdit = 'wordle-gui\vendor\rcedit-1.1.1\rcedit-x64.exe'
+& $rcEdit dist\Wordle.exe `
   --set-icon wordle-gui\images\icon.ico `
-  --set-file-version ${tag} `
-  --set-product-version ${tag}
+  --set-product-version ${version}
 
 # Compress archive
 
-$Assets = @( "LICENSE.html" , "dist\Wordle.exe" )
-
-$ArchivePath = "dist\Wordle-${tag}.zip"
-Write-Output $ArchivePath
+$assets = @( "LICENSE.html" , "dist\Wordle.exe" )
+$archivePath = "dist\Wordle-${version}.zip"
+Write-Output $archivePath
 
 Set-PSDebug -Off # next command is too noisy
-Compress-Archive -Force -LiteralPath $Assets -DestinationPath $ArchivePath
+Compress-Archive -Force -LiteralPath $assets -DestinationPath $archivePath
