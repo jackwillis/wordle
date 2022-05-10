@@ -1,6 +1,6 @@
 // Hide console window in release builds on Windows, this blocks stdout.
 // See <https://github.com/emilk/eframe_template/commit/86fe7b7b87e3a3868ce2648a3f2a63b6a044133f>.
-#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+// #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use iced::{
     text_input, window, Alignment, Color, Column, Element, Font, Sandbox, Settings, Text, TextInput,
