@@ -3,7 +3,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use iced::{
-    text_input, window, Align, Color, Column, Element, Font, Sandbox, Settings, Text, TextInput,
+    text_input, window, Alignment, Color, Column, Element, Font, Sandbox, Settings, Text, TextInput,
 };
 
 pub fn main() -> iced::Result {
@@ -109,7 +109,7 @@ impl Sandbox for App {
 fn basic_column() -> Column<'static, Message> {
     let column = Column::new()
         .padding(20)
-        .align_items(Align::Center)
+        .align_items(Alignment::Center)
         .spacing(10);
     column
 }
