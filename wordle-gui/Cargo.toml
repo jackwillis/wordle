@@ -1,6 +1,6 @@
 [package]
 name = "wordle-gui"
-version = "0.4.0"
+version = "0.4.1"
 edition = "2021"
 publish = false
 default-run = "wordle-gui"
@@ -8,8 +8,16 @@ default-run = "wordle-gui"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+# Game logic
 wordle = { path = "../wordle" }
+
+# GUI framework
 iced = "0.3.0"
 
+[build-dependencies]
+# Statically link the Visual C++ runtime when using the MSVC toolchain.
+static_vcruntime = "2.0"
+
+# Use glow renderer on Linux for greater compatibility
 [target.x86_64-unknown-linux-gnu.dependencies]
 iced = { version = "0.3.0", default-features = false, features = ["glow"] }

@@ -22,8 +22,8 @@ Rust's command-line tool, Cargo, manages the build.
 Some useful commands:
 
 * `cargo test`: runs unit tests
+* `cargo run`: starts cross-platform desktop gui game
 * `cargo run -p wordle`: starts minimalist command-line game
-* `cargo run -p wordle-gui`: starts cross-platform desktop gui game
 * `cargo build --release`: builds release binaries in "./target/"
 * `cargo doc --open`: opens documentation in browser
 
