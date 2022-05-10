@@ -17,7 +17,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --release -p wordle-gui
+          args: --release
       - name: Create package
         run: .\wordle-gui\create-package.ps1 ${{ github.ref_name }}
       - name: Create GitHub release
